@@ -1,23 +1,37 @@
 from faceid_database import YaleFaces
 from faceid_database import ORL
 import numpy as np
+from numpy import linalg as LA
 import matplotlib.pyplot as plt
 
 def calculate_mean_face(array_of_images):
-    return (np.sum(array_of_images, 0))/len(array_of_images)
+    return np.average(array_of_images,axis=0)
 
-# Path to the Yale Dataset
-path = './databases/yalefaces/'
-print 'loading Yalefaces database'
-yale = YaleFaces(path)
+def transform_images_to_array(images_in_matrix_form):
+	images = []
+	for image in images_in_matrix_form:
+		images.append(image.flatten())
+	return np.array(images)
+def images_minus_mean_face(array_of_images, mean_face):
+	images = []
+	for image in array_of_images:
+		images.append(image - mean_face)
+	return np.array(images)		
 
-path = './databases/orl_faces/'
-print 'loading ORL database'
-orl = ORL(path)
+def eigen_faces(images):
+	images = np.array(images)
+	mean_face = calculate_mean_face(images)
+	immf = images_minus_mean_face(images, mean_face)
+	images = transform_images_to_array(immf)
+	# plt.imshow(mean_face_yale, cmap='Greys_r')
+	# plt.show()
+	# images_minus_mean_face
+	covariance_matrix = np.cov(images)
+	eigenvalues, eigenvectors = LA.eig(covariance_matrix)
+	print eigenvectors
+	print '----'
+	print eigenvalues
 
-mean_face_yale = calculate_mean_face(yale.images)
-plt.imshow(mean_face_yale, cmap='Greys')
-plt.show()
-mean_face_orl = calculate_mean_face(orl.images)
-plt.imshow(mean_face_orl, cmap='Greys')
-plt.show()
+
+yale = YaleFaces('./databases/yalefaces/')
+print eigen_faces(yale.images)
