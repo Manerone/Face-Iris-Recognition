@@ -32,6 +32,7 @@ def eigen_faces(images):
 	print '----'
 	print eigenvalues
 
+# Multiplicar os autovetores pela matrix de images e retransforma-las em matrix de novo
 
 yale = YaleFaces('./databases/yalefaces/')
 print eigen_faces(yale.images)
