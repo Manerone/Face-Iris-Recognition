@@ -1,6 +1,5 @@
 import numpy as np
 from numpy import linalg as LA
-import matplotlib.pyplot as plt
 
 class Eigenface:
 	@staticmethod
@@ -30,7 +29,7 @@ class Eigenface:
 	@staticmethod
 	def calculate(images, number_of_eigenfaces = 5):
 		images = np.array(images)
-		print images.shape
+		n_of_images, heigth, width = images.shape
 		mean_face = Eigenface.calculate_mean_face(images)
 		immf = Eigenface.images_minus_mean_face(images, mean_face)
 		images = Eigenface.transform_images_to_array(immf) # num_img X (number of pixeis in images)
@@ -42,6 +41,6 @@ class Eigenface:
 		eigenfaces = []
 		for eigenvector in eigenvectors:
 			multiplication = np.dot(transposed_images, eigenvector)
-			eigenfaces.append(multiplication)
+			eigenfaces.append(multiplication.reshape(heigth, width))
 		eigenfaces = np.array(eigenfaces)
-		print eigenfaces.shape
+		return eigenfaces		
