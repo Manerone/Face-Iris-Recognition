@@ -5,5 +5,6 @@ import matplotlib.pyplot as plt
 
 yale = YaleFaces('./databases/yalefaces/')
 eigenfaces = Eigenface.calculate(yale.images)
-plt.imshow(eigenfaces[0], cmap='Greys_r')
-plt.show()
+for eigenface in eigenfaces:
+    plt.imshow(eigenface)
+    plt.show()
