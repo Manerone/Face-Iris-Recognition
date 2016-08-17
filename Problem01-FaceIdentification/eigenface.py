@@ -7,10 +7,13 @@ class Eigenface:
     def __init__(self,images):
         self.images = np.array(images)
         self.eigenfaces = None
+        self.projected_images = None
+        self.mean_face = None
 
     def calculate_mean_face(self, array_of_images):
         mean = np.mean(array_of_images, axis=0, dtype=np.float32)
-        return np.array(mean, dtype=np.float32)
+        self.mean_face = np.array(mean)
+        return np.array(mean)
 
     def transform_images_to_array(self, images_in_matrix_form):
         images = []
@@ -59,5 +62,19 @@ class Eigenface:
             self.find_eigenfaces()
         return self.eigenfaces
 
+    def get_mean_face(self):
+        if self.mean_face == None:
+            self.calculate_mean_face(self.images)
+        return self.mean_face
+
+    def project_image(self, image, eigenfaces, mean_face):
+        return np.dot(eigenfaces, (image - mean_face))
+
     def train(self):
         eigenfaces = self.transform_images_to_array(self.get_eigenfaces())
+        images = self.transform_images_to_array(self.images)
+        mean_face = self.get_mean_face().flatten()
+        self.projected_images = []
+        for image in images:
+            self.projected_images.append(self.project_image(image, eigenfaces, mean_face))
+        return self.projected_images
