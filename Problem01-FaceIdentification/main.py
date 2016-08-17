@@ -4,7 +4,8 @@ from eigenface import Eigenface
 import matplotlib.pyplot as plt
 
 yale = YaleFaces('./databases/yalefaces/')
-eigenfaces = Eigenface.calculate(yale.images)
+recognizer = Eigenface(yale.images)
+eigenfaces = recognizer.find_eigenfaces()
 for eigenface in eigenfaces:
     plt.imshow(eigenface)
     plt.show()
