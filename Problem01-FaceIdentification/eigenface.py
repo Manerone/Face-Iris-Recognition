@@ -10,7 +10,7 @@ class Eigenface:
 
     def calculate_mean_face(self, array_of_images):
         mean = np.mean(array_of_images, axis=0, dtype=np.float32)
-        return np.array(mean, dtype=np.uint8)
+        return np.array(mean, dtype=np.float32)
 
     def transform_images_to_array(self, images_in_matrix_form):
         images = []
