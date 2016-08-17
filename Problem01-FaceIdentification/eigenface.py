@@ -5,7 +5,7 @@ from numpy import linalg as LA
 class Eigenface:
 
     def __init__(self,images):
-        self.images = images
+        self.images = np.array(images)
 
     def calculate_mean_face(self, array_of_images):
         mean = np.mean(array_of_images, axis=0, dtype=np.uint32)
@@ -14,7 +14,7 @@ class Eigenface:
     def transform_images_to_array(self, images_in_matrix_form):
         images = []
         for image in images_in_matrix_form:
-            images.append(image.ravel())
+            images.append(image.flatten())
         return np.array(images)
 
     def images_minus_mean_face(self, array_of_images, mean_face):
@@ -28,8 +28,7 @@ class Eigenface:
         return eigenvectors[:, idx]
 
     def find_eigenfaces(self, number_of_eigenfaces=5):
-        images = self.images
-        images = np.array(images)  # num_imgs X heigth X width
+        images = self.images # num_imgs X heigth X width
         n_of_images, heigth, width = images.shape
 
         mean_face = self.calculate_mean_face(images)  # heigth X width
@@ -37,23 +36,19 @@ class Eigenface:
             images, mean_face)  # heigth X width
 
         images = self.transform_images_to_array(
-            immf)  # num_img X (number of pixeis in images)
+            immf)  # num_img X (number of pixels in images)
 
         covariance_matrix = np.cov(images)  # num_img x num_img
         eigenvalues, eigenvectors = LA.eig(covariance_matrix)
         eigenvectors = self.order_eigenvectors_by_eigenvalues(
             eigenvectors, eigenvalues)
-        eigenvectors = eigenvectors[:number_of_eigenfaces]  # num+img X 1
-        tpm = []
-        for eigenvector in eigenvectors:
-            tpm.append([np.real(i) for i in eigenvector])
-        eigenvectors = tpm
+        eigenvectors = eigenvectors[:number_of_eigenfaces]  # num_img X 1
+        eigenvectors = np.real(eigenvectors)
 
-        transposed_images = images.transpose()
-        eigenfaces = []
+        transposed_images = images.transpose() #  (number of pixels in images) X num_img
+        self.eigenfaces = []
         for eigenvector in eigenvectors:
             multiplication = np.dot(transposed_images, eigenvector)
-            eigenfaces.append(multiplication.reshape(heigth, width))
-        eigenfaces = np.array(eigenfaces)
-        self.eigenfaces = eigenfaces
-        return eigenfaces
+            self.eigenfaces.append(multiplication.reshape(heigth, width))
+        self.eigenfaces = np.array(self.eigenfaces)
+        return self.eigenfaces
