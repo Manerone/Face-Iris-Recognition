@@ -3,11 +3,11 @@ from numpy import linalg as LA
 
 
 class Eigenface:
+
     # Eigenface constructor
     # Params:
     #   +Images+ - Array of images that will be the database
     #         shape: (num_img, height, widht)
-
     def __init__(self, images):
         im = np.array(images)
         n_images, height, width = im.shape
@@ -20,9 +20,8 @@ class Eigenface:
         self.eigenfaces = None
 
     # @@@@@@@@@@@@@@@@@@@@@@@@@ PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
     # Only this methods should be used outside the class, the others should be
-    # private, but I was to lazy to find how to do it.
+    # private, but I was to lazy to find how to do it. ¯\_(ツ)_/¯
 
     # Creates all the necessary things for image reconstruction and recognition
     # Param:
