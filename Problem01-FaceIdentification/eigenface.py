@@ -19,6 +19,24 @@ class Eigenface:
         self.mean_face = None
         self.eigenfaces = None
 
+    # @@@@@@@@@@@@@@@@@@@@@@@@@ PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+    # Only this methods should be used outside the class, the others should be
+    # private, but I was to lazy to find how to do it.
+
+    # Creates all the necessary things for image reconstruction and recognition
+    # Param:
+    #   +number_of_eigenfaces+ - Option parameters, how many eigenfaces should
+    #       be calculated.
+    # Obeservations:
+    #   - If you want to change the number of the eigenfaces call train method
+    #       again with the number you desire.
+    def train(self, number_of_eigenfaces=5):
+        eigenfaces = self.find_eigenfaces(self.images, number_of_eigenfaces)
+        images = self.images
+        mean_face = self.get_mean_face()
+        self.project_images(images, eigenfaces, mean_face)
+
     # Get image by index
     # Params:
     #   +index+ - integer to find image
@@ -34,6 +52,8 @@ class Eigenface:
         result = np.add(multiplication, mean_face).reshape(
             self.image_height, self.image_width)
         return result
+
+    # @@@@@@@@@@@@@@@@@@@@@@@ END PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     # Calculate the average face based on the provided array of images
     # Params:
@@ -140,20 +160,34 @@ class Eigenface:
             self.mean_face = self.calculate_mean_face(self.images)
         return self.mean_face
 
+    # Projects an image into the face space
+    # Params:
+    #   +image+ - Image to be projected into the face space
+    #   +eigenfaces+ - eigenfaces of the face space
+    #   +mean_face+ - average face of the face space
+    # Obeservations:
+    #   - Image and mean_face should be in the array format,
+    #       the shape should be (1,height*width)
+    #   - Eigenfaces should be in array format, each eigenface should be
+    #       an array represent as a row.
+    # Return: An array of shape(1, number_of_eigenfaces)
     def project_image(self, image, eigenfaces, mean_face):
         # (number of pixels in images) X number_of_eigenfaces *
         # (number of pixels in images) X 1
         return np.dot(eigenfaces, (image - mean_face).transpose())
 
+    # Creates the projections on the face space of the provided images
+    # Params:
+    #   +images+ - Array of images in the array format.
+    #   +eigenfaces+ - Eigenfaces of the face space
+    #   +mean_face+ - Average face of the face space
+    # Obeservations:
+    #   - For more information on the array format see the
+    #       transform_images_to_array method.
+    # Return: nothing
     def project_images(self, images, eigenfaces, mean_face):
         tmp = []
         for image in images:
             tmp.append(
                 self.project_image(image, eigenfaces, mean_face))
         self.projected_images = np.array(tmp)
-
-    def train(self, number_of_eigenfaces=5):
-        eigenfaces = self.find_eigenfaces(self.images, number_of_eigenfaces)
-        images = self.images
-        mean_face = self.get_mean_face()
-        self.project_images(images, eigenfaces, mean_face)
