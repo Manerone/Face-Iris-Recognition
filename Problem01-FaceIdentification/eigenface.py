@@ -21,7 +21,7 @@ class Eigenface:
 
     # @@@@@@@@@@@@@@@@@@@@@@@@@ PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     # Only this methods should be used outside the class, the others should be
-    # private, but I was to lazy to find how to do it. ¯\_(ツ)_/¯
+    # private, but I was to lazy to find how to do it.
 
     # Creates all the necessary things for image reconstruction and recognition
     # Param:
