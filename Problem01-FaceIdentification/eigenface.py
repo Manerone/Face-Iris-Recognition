@@ -31,10 +31,9 @@ class Eigenface:
     #   - If you want to change the number of the eigenfaces call train method
     #       again with the number you desire.
     def train(self, number_of_eigenfaces=5):
-        eigenfaces = self.find_eigenfaces(self.images, number_of_eigenfaces)
+        self.find_eigenfaces(self.images, number_of_eigenfaces)
         images = self.images
-        mean_face = self.get_mean_face()
-        self.project_images(images, eigenfaces, mean_face)
+        self.project_images(images)
 
     # Get image by index
     # Params:
@@ -44,14 +43,32 @@ class Eigenface:
         return self.images[index].reshape(self.image_height, self.image_width)
 
     def reconstruct_image(self, index):
-        projected_image = self.projected_images[index].reshape(-1, 1)
+        # projected_image has shape (n_eigenfaces, 1)
+        projected_image = self.projected_images[index]
+        # eigenfaces has shape (n_eigenfaces, pixels in image)
         eigenfaces = self.eigenfaces
-        mean_face = self.get_mean_face().reshape(-1, 1)
+        # mean_face has shape (1, pixels in image)
+        mean_face = self.get_mean_face()
+        # multiplication has shape (pixels_in_image, 1)
         multiplication = np.dot(eigenfaces.transpose(), projected_image)
-        result = np.add(multiplication, mean_face).reshape(
-            self.image_height, self.image_width)
-        return result
+        # result has shape (pixels_in_image, 1)
+        result = np.add(multiplication, mean_face.transpose())
+        return result.reshape(self.image_height, self.image_width)
 
+    def recognize(self, test_image):
+        test_image = test_image.flatten()
+        # face_space has shape (n_images, n_eigenfaces, 1)
+        face_space = self.projected_images
+        # projected_test_image has shape(n_eigenfaces, 1)
+        projected_test_image = self.project_image(test_image)
+        answer = 0
+        smallest_distance = LA.norm(projected_test_image - face_space[0])
+        for index in xrange(len(self.images)):
+            distance = LA.norm(projected_test_image - face_space[index])
+            if smallest_distance > distance:
+                smallest_distance = distance
+                answer = index
+        return self.get_image(answer)
     # @@@@@@@@@@@@@@@@@@@@@@@ END PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     # Calculate the average face based on the provided array of images
@@ -170,10 +187,14 @@ class Eigenface:
     #   - Eigenfaces should be in array format, each eigenface should be
     #       an array represent as a row.
     # Return: An array of shape(1, number_of_eigenfaces)
-    def project_image(self, image, eigenfaces, mean_face):
-        # (number of pixels in images) X number_of_eigenfaces *
-        # (number of pixels in images) X 1
-        return np.dot(eigenfaces, (image - mean_face).transpose())
+    def project_image(self, image):
+        # eigenfaces shape: (n_eigenfaces, pixels in image)
+        eigenfaces = self.eigenfaces
+        # image and mean face shape: (1, pixels_in_image)
+        mean_face = self.get_mean_face()
+        result = np.dot(eigenfaces, (image - mean_face).transpose())
+        # result shape: (n_eigenfaces, 1)
+        return result
 
     # Creates the projections on the face space of the provided images
     # Params:
@@ -184,9 +205,11 @@ class Eigenface:
     #   - For more information on the array format see the
     #       transform_images_to_array method.
     # Return: nothing
-    def project_images(self, images, eigenfaces, mean_face):
+    def project_images(self, images):
         tmp = []
         for image in images:
             tmp.append(
-                self.project_image(image, eigenfaces, mean_face))
+                self.project_image(image))
+        # projected_images shape: (n_images, n_eigenfaces, 1)
+        # each projected image has shape (n_eigenfaces, 1)
         self.projected_images = np.array(tmp)
