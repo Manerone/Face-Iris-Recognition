@@ -17,12 +17,12 @@ for label in yale.class_labels:
         else:
             subjects.append(yale.subjects[index])
             images.append(yale.images[index])
-    print subjects
     recognizer = Eigenface(images, subjects)
-    recognizer.train(100)
-    correct = 0.0
+    recognizer.train(156)
+    correct = 0
     for index, subject in enumerate(test_subjects):
-        if subject == recognizer.recognize(test_images[index]):
+        result = recognizer.recognize(test_images[index])
+        if subject == result:
             correct += 1
-    accuracy = correct/len(test_subjects)
+    accuracy = correct/float(len(test_subjects))
     print 'Accuracy: ', accuracy * 100, '%'
