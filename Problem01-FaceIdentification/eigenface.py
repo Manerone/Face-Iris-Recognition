@@ -8,13 +8,14 @@ class Eigenface:
     # Params:
     #   +Images+ - Array of images that will be the database
     #         shape: (num_img, height, widht)
-    def __init__(self, images):
+    def __init__(self, images, subjects):
         im = np.array(images)
         n_images, height, width = im.shape
         self.n_images = n_images
         self.image_height = height
         self.image_width = width
         self.images = self.transform_images_to_array(im)
+        self.subjects = subjects
         self.projected_images = None
         self.mean_face = None
         self.eigenfaces = None
@@ -68,7 +69,7 @@ class Eigenface:
             if smallest_distance > distance:
                 smallest_distance = distance
                 answer = index
-        return self.get_image(answer)
+        return self.subjects[answer]
     # @@@@@@@@@@@@@@@@@@@@@@@ END PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
     # Calculate the average face based on the provided array of images
