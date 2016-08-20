@@ -1,7 +1,6 @@
 from faceid_database import YaleFaces
 from faceid_database import ORL
 from eigenface import Eigenface
-import matplotlib.pyplot as plt
 
 yale = YaleFaces('./databases/yalefaces/')
 for label in yale.class_labels:
@@ -18,7 +17,7 @@ for label in yale.class_labels:
             subjects.append(yale.subjects[index])
             images.append(yale.images[index])
     recognizer = Eigenface(images, subjects)
-    recognizer.train(156)
+    recognizer.train(10)
     correct = 0
     for index, subject in enumerate(test_subjects):
         result = recognizer.recognize(test_images[index])
