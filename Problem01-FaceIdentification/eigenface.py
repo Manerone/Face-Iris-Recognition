@@ -58,17 +58,14 @@ class Eigenface:
 
     def recognize(self, test_image):
         test_image = test_image.flatten()
-        # face_space has shape (n_images, n_eigenfaces, 1)
-        face_space = self.projected_images
+        # projected_images has shape (n_images, n_eigenfaces, 1)
+        projected_images = self.projected_images
         # projected_test_image has shape(n_eigenfaces, 1)
         projected_test_image = self.project_image(test_image)
-        answer = 0
-        smallest_distance = LA.norm(projected_test_image - face_space[0])
-        for index in xrange(len(self.images)):
-            distance = LA.norm(projected_test_image - face_space[index])
-            if smallest_distance > distance:
-                smallest_distance = distance
-                answer = index
+        distances = []
+        for projected_image in projected_images:
+            distances.append(LA.norm(projected_test_image - projected_image))
+        answer = np.argmin(distances)
         return self.subjects[answer]
     # @@@@@@@@@@@@@@@@@@@@@@@ END PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
