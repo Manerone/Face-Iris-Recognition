@@ -29,13 +29,13 @@ class ORL(Database):
 			subject_path = [os.path.join(subject_paths, f) for f in os.listdir(subject_paths) if f.endswith('.pgm') and os.path.isfile(os.path.join(subject_paths,f)) ]
 
 			for image_path in subject_path:
-#				print 'sub: {0}'.format(image_path)
+				# print 'sub: {0}'.format(image_path)
 				# Read the image and convert to grayscale
 				image_pil = Image.open(image_path).convert('L')
 				# Convert the image format into numpy array
 				image = np.array(image_pil, 'uint8')
 				# Get the label of the image
-				nbr = int(os.path.split(image_path)[1].split(".")[0])
+				nbr = int(os.path.split(image_path)[0].split('/')[-1].replace('s', ''))
 
 				self.images.append(image)
 				self.subjects.append(nbr)
