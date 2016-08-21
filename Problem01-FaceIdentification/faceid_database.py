@@ -40,7 +40,7 @@ class ORL(Database):
 				self.images.append(image)
 				self.subjects.append(nbr)
 
-			print 'sub: {0}({1}#) - {2}'.format(s,len(subject_path),subject_paths)
+			# print 'sub: {0}({1}#) - {2}'.format(s,len(subject_path),subject_paths)
 
 
 class YaleFaces(Database):
@@ -80,4 +80,4 @@ class YaleFaces(Database):
 				self.subjects.append(nbr)
 				self.classes.append(class_label)
 
-			print 'class_label: {0}({1}#) - {2}'.format(c,len(image_paths), class_label)
+			# print 'class_label: {0}({1}#) - {2}'.format(c,len(image_paths), class_label)
