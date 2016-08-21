@@ -1,6 +1,7 @@
 from faceid_database import YaleFaces
 from faceid_database import ORL
 from eigenface import Eigenface
+import random
 
 
 def calculate_yale():
@@ -38,30 +39,35 @@ def calculate_orl():
     n_of_itens_per_fold = n_of_images/k_fold
     n_of_correct_guesses = 0
     n_of_tries = 0
-    for k in xrange(k_fold):
-        print 'Calculating', k+1, 'subset of', k_fold, 'subsets'
-        images = []
-        subjects = []
-        test_images = []
-        test_subjects = []
-        for index, image in enumerate(orl.images):
-            if k*n_of_itens_per_fold <= index < (k+1) * n_of_itens_per_fold:
-                test_images.append(image)
-                test_subjects.append(orl.subjects[index])
-            else:
-                images.append(image)
-                subjects.append(orl.subjects[index])
-        recognizer = Eigenface(images, subjects)
-        recognizer.train(150)
-        for index, test_subject in enumerate(test_subjects):
-            n_of_tries += 1
-            if test_subject == recognizer.recognize(test_images[index]):
-                n_of_correct_guesses += 1
+    images = []
+    subjects = []
+    test_images = []
+    test_subjects = []
+
+    print 'Generating test sample'
+    indexes_to_test = random.sample(range(n_of_images), n_of_itens_per_fold)
+    for index in xrange(n_of_images):
+        if index in indexes_to_test:
+            test_images.append(orl.images[index])
+            test_subjects.append(orl.subjects[index])
+        else:
+            images.append(orl.images[index])
+            subjects.append(orl.subjects[index])
+
+    print 'Training recognizer'
+    recognizer = Eigenface(images, subjects)
+    recognizer.train(300)
+
+    print 'Calculating tests'
+    for index, test_subject in enumerate(test_subjects):
+        n_of_tries += 1
+        if test_subject == recognizer.recognize(test_images[index]):
+            n_of_correct_guesses += 1
     accuracy = n_of_correct_guesses/float(n_of_tries)
     print 'Accuracy: ', accuracy * 100, '%'
 
 
 # MAIN
-calculate_yale()
+# calculate_yale()
 print '----------------------------------------------------------------------'
 calculate_orl()
