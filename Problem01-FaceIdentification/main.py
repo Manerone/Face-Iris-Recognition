@@ -88,6 +88,6 @@ def calculate_orl():
 
 # MAIN
 print_system_info()
-# calculate_yale()
+calculate_yale()
 print '-------------------------------------------------------------------'
 calculate_orl()
