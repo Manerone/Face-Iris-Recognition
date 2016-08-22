@@ -9,15 +9,15 @@ from sys import stdout
 
 CLEAR_LINE = '\x1b[2K'
 
+
 def print_system_info():
     print '-----------------------SYSTEM INFORMATION--------------------------'
     print '-> System: ', platform.system(), platform.release()
     print '-> Python Version: ', platform.python_version()
-    print '-------------------------------------------------------------------'
 
 
 def calculate_yale():
-    print 'Testing YaleFaces database'
+    print '-----------------------Yale Faces Tests----------------------------'
     yale = YaleFaces('./databases/yalefaces/')
     for label in yale.class_labels:
         print 'Testing remotion of label: ', label
@@ -44,7 +44,7 @@ def calculate_yale():
 
 
 def calculate_orl():
-    print 'Testing ORL database\n'
+    print '-----------------------ORL Faces Tests-----------------------------'
     number_of_eigenfaces_on_each_test = [5, 10, 50, 100, 200, 300]
     orl = ORL('./databases/orl_faces/')
     n_of_images = len(orl.images)
@@ -54,7 +54,7 @@ def calculate_orl():
         print 'Testing with', n_of_eigenfaces, 'eigenfaces'
         means = []
         for k in xrange(k_fold):
-            stdout.write('\r%d%%' % (k*10))
+            stdout.write('\r%d%%' % ((k/float(k_fold))*100))
             stdout.flush()
             images = []
             subjects = []
@@ -89,5 +89,4 @@ def calculate_orl():
 # MAIN
 print_system_info()
 calculate_yale()
-print '-------------------------------------------------------------------'
 calculate_orl()
