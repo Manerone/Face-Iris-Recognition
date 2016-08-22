@@ -20,7 +20,7 @@ This problem is divided in parts, and it uses two databases:
 ##### Parts
 1. Compute the mean face for each database
 2. Compute the first five eigenfaces for each database
-3. Implement the Eigenface and Fisherface method...
+3. Implement the Eigenface ~~and Fisherface~~ method...
  1. Use a cross-validation scheme of leave-one-"expression or lighting" for the Yace Face Database. What expression/lighting is the worst in terms of accuracy?
  2. Use a ten-fold cross-validation scheme and report the mean an stand deviation accuracies for the ORL database. Is there a difference statisical significance between the reported values?
 4. Provide a runtime analysis for training and testing
