@@ -3,7 +3,14 @@ from faceid_database import ORL
 from eigenface import Eigenface
 import numpy as np
 import random
+import platform
 
+
+def print_system_info():
+    print '-----------------------SYSTEM INFORMATION--------------------------'
+    print '-> System: ', platform.system(), platform.release()
+    print '-> Python Version: ', platform.python_version()
+    print '-------------------------------------------------------------------'
 
 def calculate_yale():
     print 'Testing YaleFaces database'
@@ -72,6 +79,7 @@ def calculate_orl():
     print 'Standart Deviation:', np.std(means)
 
 # MAIN
-# calculate_yale()
+print_system_info()
+calculate_yale()
 print '----------------------------------------------------------------------'
 calculate_orl()
