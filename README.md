@@ -12,8 +12,6 @@ A brief description of each problem
 ##### How to execute
 Just type in the console: ```python main.py```
 
-This problem is divided in parts, and it uses two databases:
-
 ##### Databases
 1. [ORL(AT&T)](http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html)
 2. [Yale](http://vision.ucsd.edu/content/yale-face-database)
