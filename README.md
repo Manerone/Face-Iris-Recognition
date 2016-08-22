@@ -9,6 +9,9 @@ A brief description of each problem
 
 ### Problem 01 - Face Identification
 
+##### How to execute
+Just type in the console: ```python main.py```
+
 This problem is divided in parts, and it uses two databases:
 
 ##### Databases
