@@ -11,9 +11,10 @@ CLEAR_LINE = '\x1b[2K'
 
 
 def print_system_info():
-    print '-----------------------SYSTEM INFORMATION--------------------------'
+    print '=======================SYSTEM INFORMATION=========================='
     print '-> System: ', platform.system(), platform.release()
     print '-> Python Version: ', platform.python_version()
+    print '==================================================================='
 
 
 def calculate_yale():
