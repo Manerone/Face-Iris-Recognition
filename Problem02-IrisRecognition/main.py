@@ -6,6 +6,7 @@
 # com isso eu detectei a pupila
 # dado o centro da pupila conseguimos detectar a iris
 # http://stackoverflow.com/questions/9860667/writing-robust-color-and-size-invariant-circle-detection-with-opencv-based-on
+# http://stackoverflow.com/questions/10716464/what-are-the-correct-usage-parameter-values-for-houghcircles-in-opencv-for-iris
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
