@@ -25,3 +25,15 @@ Just type in the console: ```python main.py```
  1. Use a cross-validation scheme of leave-one-"expression or lighting" for the Yace Face Database. What expression/lighting is the worst in terms of accuracy?
  2. Use a ten-fold cross-validation scheme and report the mean an stand deviation accuracies for the ORL database. Is there a difference statisical significance between the reported values?
 4. Provide a runtime analysis for training and testing
+
+### Problem 02 - Iris Identification
+
+##### How to execute
+Just type in the console: ```python main.py```
+
+##### Parts
+1. Implement a function to segment and normalize iris region.
+2. Compute features: - Zero crossing Wavelet - Local Binary Patterns (LBP) - Gabor 2D Wavelets - Laplacian of Gaussian
+3. Compute metrics for Iris verification (hamming distance)
+4. Fusion of score / Multiple signatures
+5. Iris identification
