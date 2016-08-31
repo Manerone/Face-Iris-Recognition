@@ -31,47 +31,41 @@ def find_pupil(image):
     return circles[0]
 
 
-def mean(points, image):
-    values = []
-    for point in points:
-        values.append(image[point])
-    return np.average(np.array(values))
-
-
-def get_points_near_circle_perimeter(x, y, r, img, nearness=5):
-    points_inside_circle = []
-    img_row_size, img_column_size = img.shape
-    for i in xrange(img_row_size):
-        for j in xrange(img_column_size):
-            point_distance = (x-i)**2 + (y-j)**2
-            if (r-nearness <= point_distance and point_distance <= r):
-                points_inside_circle.append((i, j))
-    return points_inside_circle
+def get_points_near_circle_perimeter(x, y, r, img, num_of_points=360):
+    points = []
+    distance_of_points = (2 * np.pi)/num_of_points
+    for i in range(num_of_points):
+        teta = i*distance_of_points
+        x_p = x + int(r*np.cos(teta))
+        y_p = y + int(r*np.sin(teta))
+        points.append(img[x_p][y_p])
+    return np.array(points)
 
 
 def find_iris(x_pupil, y_pupil, r_pupil, img, value=4):
-    max_r = min(img.shape)
+    # pega X pontos em cada circulo em uma direcao e calcula a diferenca dele para o do circulo anterior
+    # soma essas diferencas
+    max_iterations = 15
+    iterations = 1
     image = img.copy()
     x, y, r_b = x_pupil, y_pupil, r_pupil
-    r_b += 15
-    r_a = r_b + 20
-    while r_a < max_r:
-        print r_a, max_r
-        cv2.circle(image, (x, y), r_a, (0, 255, 0), 1)
-        cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
-        show_img([image])
+    r_a = r_b + 5
+    variations = []
+    while iterations < max_iterations:
+        # cv2.circle(image, (x, y), r_a, (0, 255, 0), 1)
+        # cv2.circle(image, (x, y), 2, (0, 0, 255), 3)
+        # show_img([image])
         points_before = get_points_near_circle_perimeter(x, y, r_b, img)
         points_after = get_points_near_circle_perimeter(x, y, r_a, img)
-        mean_after = mean(points_after, img)
-        mean_before = mean(points_before, img)
-        print abs(mean_after - mean_before)
-        if abs(mean_after - mean_before) > value:
-            break
-        else:
-            r_b = r_a
-            r_a += 10
-    return x, y, r_a
-
+        # print abs(mean_after - mean_before)
+        # if abs(mean_after - mean_before) > value:
+        #     break
+        # else:
+        variations.append((r_a, sum(abs(points_after - points_before))))
+        r_b = r_a
+        r_a += 5
+        iterations +=1
+    return x, y, max(variations,key=itemgetter(1))[0]
 
 def pre_process_img(image):
     # Threshold.
@@ -113,11 +107,11 @@ for index, image in enumerate(casia.images):
     print casia.subjects[index]
     processed_img = pre_process_img(image)
     x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
-    cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
+    cv2.circle(image, (x_pupil, y_pupil), r_pupil, (255, 255, 255), 1)
     cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
     image = cv2.equalizeHist(image)
     x_iris, y_iris, r_iris = find_iris(x_pupil, y_pupil, r_pupil, image)
-    cv2.circle(image, (x_iris, y_iris), r_iris, (0, 255, 0), 1)
+    cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
     cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
     show_img([processed_img, image])
 # image = Image.open(
