@@ -46,13 +46,13 @@ def find_iris(x_pupil, y_pupil, r_pupil, img, value=4):
     n_of_rows, n_of_columns = img.shape
     max_r = min((n_of_rows - y_pupil, n_of_columns - x_pupil))
     x, y, r_b = x_pupil, y_pupil, r_pupil
-    r_a = r_b + 20
+    r_a = r_b + 5
     variations = []
+    points_before = get_points_near_circle_perimeter(x, y, r_b, image)
     while r_a < max_r:
-        points_before = get_points_near_circle_perimeter(x, y, r_b, image)
         points_after = get_points_near_circle_perimeter(x, y, r_a, image)
         variations.append((r_a, sum(abs(points_after - points_before))))
-        r_b = r_a
+        points_before = points_after
         r_a += 5
     return x, y, max(variations, key=itemgetter(1))[0]
 
