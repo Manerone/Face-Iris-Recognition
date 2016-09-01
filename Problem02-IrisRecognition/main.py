@@ -112,15 +112,15 @@ def normalize_iris((x_pupil, y_pupil, r_pupil), (x_iris, y_iris, r_iris),
 
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
 for index, image in enumerate(casia.images):
-    print "preprocess"
+    print "Preprocessing image"
     processed_img = pre_process_img(image)
-    print "pupil"
+    print "Finding pupil"
     x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
     pupil_coords = (x_pupil, y_pupil, r_pupil)
-    print "iris"
+    print "Finding iris"
     x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
     iris_coords = (x_iris, y_iris, r_iris)
-    print "normalizing"
+    print "Segmenting image"
     normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
 
     cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
