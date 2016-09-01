@@ -41,7 +41,7 @@ def get_points_near_circle_perimeter(x, y, r, img, num_of_points=360):
     return np.array(points)
 
 
-def find_iris(x_pupil, y_pupil, r_pupil, img, value=4):
+def find_iris((x_pupil, y_pupil, r_pupil), img, value=4):
     image = cv2.equalizeHist(img)
     n_of_rows, n_of_columns = img.shape
     max_r = min((n_of_rows - y_pupil, n_of_columns - x_pupil))
@@ -49,11 +49,14 @@ def find_iris(x_pupil, y_pupil, r_pupil, img, value=4):
     r_a = r_b + 5
     variations = []
     points_before = get_points_near_circle_perimeter(x, y, r_b, image)
-    while r_a < max_r:
+    iterations = 0
+    max_iterations = 20
+    while r_a < max_r and iterations < max_iterations:
         points_after = get_points_near_circle_perimeter(x, y, r_a, image)
         variations.append((r_a, sum(abs(points_after - points_before))))
         points_before = points_after
         r_a += 5
+        iterations += 1
     return x, y, max(variations, key=itemgetter(1))[0]
 
 
@@ -92,11 +95,33 @@ def pre_process_img(image):
     return canny
 
 
+def normalize_iris((x_pupil, y_pupil, r_pupil), (x_iris, y_iris, r_iris),
+                   image, n_of_divisions=360):
+    distance_of_each_division = (2*np.pi)/n_of_divisions
+    normalized_image = []
+    for division in xrange(n_of_divisions):
+        teta = distance_of_each_division * division
+        points = []
+        for radius in xrange(int(r_pupil), int(r_iris+1)):
+            y_p = y_iris + int(radius * np.cos(teta))
+            x_p = x_iris + int(radius * np.sin(teta))
+            points.append(image[y_p][x_p])
+        normalized_image.append(points)
+    normalized_image = np.array(normalized_image).T
+    return cv2.resize(normalized_image, (600, 100), interpolation=cv2.INTER_CUBIC)
+
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
 for index, image in enumerate(casia.images):
+    print "preprocess"
     processed_img = pre_process_img(image)
+    print "pupil"
     x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
-    x_iris, y_iris, r_iris = find_iris(x_pupil, y_pupil, r_pupil, image)
+    pupil_coords = (x_pupil, y_pupil, r_pupil)
+    print "iris"
+    x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
+    iris_coords = (x_iris, y_iris, r_iris)
+    print "normalizing"
+    normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
 
     cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
     cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
@@ -105,18 +130,24 @@ for index, image in enumerate(casia.images):
     cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
 
     show_img([processed_img, image])
+    show_img([normalized_iris])
 # image = Image.open(
 #     './databases/CASIA-Iris-Lamp-100/097/L/S2097L03.jpg').convert('L')
 # image = np.array(image, 'uint8')
 # processed_img = pre_process_img(image)
 # x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
+# pupil_coords = (x_pupil, y_pupil, r_pupil)
 #
-# x_iris, y_iris, r_iris = find_iris(x_pupil, y_pupil, r_pupil, image)
+# x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
+# iris_coords = (x_iris, y_iris, r_iris)
 #
-# cv2.circle(image, (x_pupil, y_pupil), r_pupil, (255, 255, 255), 1)
-# cv2.circle(image, (x_pupil, y_pupil), 2, (255, 255, 255), 3)
+# normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
 #
-# cv2.circle(image, (x_iris, y_iris), r_iris, (0, 255, 0), 1)
+# cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
+# cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
+#
+# cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
 # cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
 #
+# show_img([normalized_iris])
 # show_img([processed_img, image])
