@@ -50,7 +50,7 @@ def find_iris((x_pupil, y_pupil, r_pupil), img, value=4):
     variations = []
     points_before = get_points_near_circle_perimeter(x, y, r_b, image)
     iterations = 0
-    max_iterations = 20
+    max_iterations = 30
     while r_a < max_r and iterations < max_iterations:
         points_after = get_points_near_circle_perimeter(x, y, r_a, image)
         variations.append((r_a, sum(abs(points_after - points_before))))
