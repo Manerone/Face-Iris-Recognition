@@ -12,6 +12,8 @@ from casia_iris_image_loader import ImageLoaderCASIAIris
 import numpy as np
 from PIL import Image
 from operator import itemgetter
+import pywt
+from matplotlib import pyplot as plt
 
 
 def show_img(imgs):
@@ -108,46 +110,60 @@ def normalize_iris((x_pupil, y_pupil, r_pupil), (x_iris, y_iris, r_iris),
             points.append(image[y_p][x_p])
         normalized_image.append(points)
     normalized_image = np.array(normalized_image).T
-    return cv2.resize(normalized_image, (600, 100), interpolation=cv2.INTER_CUBIC)
+    return cv2.resize(normalized_image, (256, 32), interpolation=cv2.INTER_CUBIC)
 
-casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
-for index, image in enumerate(casia.images):
-    print "Preprocessing image"
-    processed_img = pre_process_img(image)
-    print "Finding pupil"
-    x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
-    pupil_coords = (x_pupil, y_pupil, r_pupil)
-    print "Finding iris"
-    x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
-    iris_coords = (x_iris, y_iris, r_iris)
-    print "Segmenting image"
-    normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
+def get_image_signature(image):
+    cA,_ = pywt.dwt2(image, 'haar')
+    cA,_ = pywt.dwt2(cA, 'haar')
+    cA,_ = pywt.dwt2(cA, 'haar')
+    cA,(cH, cV, cD) = pywt.dwt2(cA, 'haar')
 
-    cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
-    cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
+    return cA
 
-    cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
-    cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
+# casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
+# for index, image in enumerate(casia.images):
+#     print "Preprocessing image"
+#     processed_img = pre_process_img(image)
+#     print "Finding pupil"
+#     x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
+#     pupil_coords = (x_pupil, y_pupil, r_pupil)
+#     print "Finding iris"
+#     x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
+#     iris_coords = (x_iris, y_iris, r_iris)
+#     print "Segmenting image"
+#     normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
+#     coeffs = pywt.dwt2(normalize_iris, 'haar')
 
-    show_img([processed_img, image])
-    show_img([normalized_iris])
-# image = Image.open(
-#     './databases/CASIA-Iris-Lamp-100/097/L/S2097L03.jpg').convert('L')
-# image = np.array(image, 'uint8')
-# processed_img = pre_process_img(image)
-# x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
-# pupil_coords = (x_pupil, y_pupil, r_pupil)
-#
-# x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
-# iris_coords = (x_iris, y_iris, r_iris)
-#
-# normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
-#
-# cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
-# cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
-#
-# cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
-# cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
-#
-# show_img([normalized_iris])
+#     cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
+#     cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
+
+#     cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
+#     cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
+
+#     show_img([processed_img, image])
+#     show_img([normalized_iris])
+#     show_img([coeffs[0]])
+image = Image.open(
+    './databases/CASIA-Iris-Lamp-100/097/L/S2097L03.jpg').convert('L')
+image = np.array(image, 'uint8')
+processed_img = pre_process_img(image)
+x_pupil, y_pupil, r_pupil = find_pupil(processed_img)
+pupil_coords = (x_pupil, y_pupil, r_pupil)
+
+x_iris, y_iris, r_iris = find_iris(pupil_coords, image)
+iris_coords = (x_iris, y_iris, r_iris)
+
+normalized_iris = normalize_iris(pupil_coords, iris_coords, image)
+
+signature = get_image_signature(normalized_iris)
+
+cv2.circle(image, (x_pupil, y_pupil), r_pupil, (0, 255, 0), 1)
+cv2.circle(image, (x_pupil, y_pupil), 2, (0, 0, 255), 3)
+
+cv2.circle(image, (x_iris, y_iris), r_iris, (255, 255, 0), 1)
+cv2.circle(image, (x_iris, y_iris), 2, (0, 0, 255), 3)
+
 # show_img([processed_img, image])
+# show_img([normalized_iris])
+plt.subplot(111), plt.imshow(cA, cmap='grey')
+plt.show()
