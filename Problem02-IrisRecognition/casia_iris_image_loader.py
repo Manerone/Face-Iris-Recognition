@@ -21,10 +21,11 @@ class ImageLoaderCASIAIris(object):
                 for image_path in self.get_files_from(left_and_right_eye_dir):
                     termination = str.split(image_path, '.')[-1]
                     if termination == 'jpg':
+                        l_or_r_eye = str.split(left_and_right_eye_dir, '/')[-1]
                         image_pil = Image.open(image_path).convert('L')
                         image_np = np.array(image_pil, 'uint8')
                         self.images.append(image_np)
-                        self.subjects.append(subject)
+                        self.subjects.append(str(subject)+l_or_r_eye)
 
     def get_directories_from(self, path):
         directories = []

@@ -8,11 +8,12 @@ import scipy.spatial
 class IrisRecognizer:
     """docstring for IrisRecognizer"""
 
-    def __init__(self, subjects, images, acceptance_threshold=0.7):
+    def __init__(self, subjects, images):
         self.subjects = subjects
         self.images = images
         self.signatures = []
 
+    # TODO: Transform this into multiprocess
     def train(self):
         for image in self.images:
             self.process_image(image)
