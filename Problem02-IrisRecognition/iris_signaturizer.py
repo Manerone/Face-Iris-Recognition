@@ -2,10 +2,9 @@ import cv2
 import numpy as np
 from operator import itemgetter
 import pywt
-import scipy.spatial
 
 
-class IrisRecognizer:
+class IrisSignaturizer:
     """docstring for IrisRecognizer"""
 
     def __init__(self, subjects, images):
@@ -14,15 +13,11 @@ class IrisRecognizer:
         self.signatures = []
 
     # TODO: Transform this into multiprocess
-    def train(self):
+    def generate_signatures(self):
         for image in self.images:
-            self.process_image(image)
+            self.signaturize_image(image)
 
-    def verify(self, subject, image):
-        img_signature = self.process_image(image)
-        distance = scipy.spatial.distance.hamming(img_signature,)
-
-    def process_image(self, image):
+    def signaturize_image(self, image):
         processed_img = self.pre_process_img(image)
         x_pupil, y_pupil, r_pupil = self.find_pupil(processed_img)
         pupil_coords = (x_pupil, y_pupil, r_pupil)

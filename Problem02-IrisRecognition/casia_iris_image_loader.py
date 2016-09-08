@@ -1,6 +1,9 @@
 import os
 from PIL import Image
 import numpy as np
+from sys import stdout
+
+CLEAR_LINE = '\x1b[2K'
 
 
 class ImageLoaderCASIAIris(object):
@@ -8,7 +11,11 @@ class ImageLoaderCASIAIris(object):
 
     def __init__(self, path):
         self.path = os.path.abspath(path)
+        stdout.write('\rLoading database...')
+        stdout.flush()
         self.get_images_and_subjects(self.path)
+        stdout.write('\r' + CLEAR_LINE)
+        stdout.flush()
 
     def get_images_and_subjects(self, path):
         self.images = []
