@@ -5,6 +5,9 @@ import platform
 import numpy as np
 import pandas
 import matplotlib.pyplot as plt
+import random
+from sklearn.svm import LinearSVC
+from local_binary_patterns import LocalBinaryPatterns
 
 
 def print_system_info():
@@ -88,12 +91,46 @@ def iris_verification(subjects, signatures):
     print('  EER: %.2f %.2f %.2f' % tuple(measures[eer]))
 
 
+def generate_training_and_test_sets(subjects, normalized_irises):
+    desc = LocalBinaryPatterns(24, 8)
+    training_images = []
+    training_subjects = []
+    test_images = []
+    test_subjects = []
+    n_of_subjects = len(subjects)
+    size_of_sample = int(n_of_subjects*0.1)
+    indexes_to_test = random.sample(xrange(n_of_subjects), size_of_sample)
+    for i in xrange(n_of_subjects):
+        hist = desc.describe(normalized_irises[i])
+        if i in indexes_to_test:
+            test_images.append(hist)
+            test_subjects.append(subjects[i])
+        else:
+            training_images.append(hist)
+            training_subjects.append(subjects[i])
+    training_images = np.array(training_images)
+    training_subjects = np.array(training_subjects)
+    test_images = np.array(test_images)
+    test_subjects = np.array(test_subjects)
+    return training_images, training_subjects, test_images, test_subjects
+
+
 def iris_identification(subjects, normalized_irises):
     print '=======================IDENTIFICATION=============================='
+    training_images, training_subjects, test_images, test_subjects = \
+        generate_training_and_test_sets(subjects, normalized_irises)
+    model = LinearSVC(C=100.0, random_state=42)
+    model.fit(training_images, training_subjects)
+    acc = 0
+    for i in xrange(len(test_images)):
+        prediction = model.predict(test_images[i].reshape(1, -1))[0]
+        if prediction == test_subjects[i]:
+            acc += 1
+    print 'Accuracy: ', acc/float(len(test_images))*100, '%'
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
-signaturizer = IrisSignaturizer(casia.subjects[:500], casia.images[:500])
+signaturizer = IrisSignaturizer(casia.subjects[:50], casia.images[:50])
 signaturizer.generate_signatures()
-iris_verification(signaturizer.subjects, signaturizer.signatures)
+# iris_verification(signaturizer.subjects, signaturizer.signatures)
 iris_identification(signaturizer.subjects, signaturizer.normalized_irises)
