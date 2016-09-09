@@ -10,6 +10,7 @@ class IrisSignaturizer:
     def __init__(self, subjects, images):
         self.subjects = subjects
         self.images = images
+        self.normalized_irises = []
         self.signatures = []
 
     # TODO: Transform this into multiprocess
@@ -25,6 +26,7 @@ class IrisSignaturizer:
         iris_coords = (x_iris, y_iris, r_iris)
         normalized_iris = self.normalize_iris(
             pupil_coords, iris_coords, image)
+        self.normalized_irises.append(normalized_iris)
         signature = self.get_image_signature(normalized_iris)
         self.signatures.append(signature)
 

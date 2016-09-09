@@ -58,7 +58,6 @@ def print_far_frr_table(measures):
     print ''
 
 
-# TODO: transform it into multiprocess
 def iris_verification(subjects, signatures):
     print '=======================VERIFICATION================================'
     distances = calculate_distances(subjects, signatures)
@@ -75,8 +74,13 @@ def iris_verification(subjects, signatures):
             eer = index
     print('  EER: %.2f %.2f %.2f' % tuple(measures[eer]))
 
+
+def iris_identification(subjects, normalized_irises):
+    print '=======================IDENTIFICATION=============================='
+
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
 signaturizer = IrisSignaturizer(casia.subjects[:5], casia.images[:5])
 signaturizer.generate_signatures()
 iris_verification(signaturizer.subjects, signaturizer.signatures)
+iris_identification(signaturizer.subjects, signaturizer.normalized_irises)
