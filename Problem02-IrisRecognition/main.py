@@ -3,6 +3,7 @@ from iris_signaturizer import IrisSignaturizer
 import scipy.spatial.distance as distance
 import platform
 import numpy as np
+import pandas
 from sys import stdout
 
 CLEAR_LINE = '\x1b[2K'
@@ -43,19 +44,39 @@ def verify(subjects, distances, threshold):
                 elif subjects[i] != subjects[j] and dist <= threshold:
                     far += 1
 
-    print "FRR:", (frr/float(n_of_signatures*n_of_signatures)*100), '%'
-    print "FAR:", (far/float(n_of_signatures*n_of_signatures)*100), '%'
+    frr = (frr/float(n_of_signatures*n_of_signatures)*100)
+    far = (far/float(n_of_signatures*n_of_signatures)*100)
+    return (frr, far)
+
+
+def print_far_frr_table(measures):
+    padding = np.chararray(len(measures))
+    padding[:] = ''
+    measures = np.array(measures)
+    print 'False Rejection Rates and False Acception Rates\n'
+    print pandas.DataFrame(measures, padding, ['Threshold', 'FRR', 'FAR'])
+    print ''
 
 
 # TODO: transform it into multiprocess
 def iris_verification(subjects, signatures):
+    print '=======================VERIFICATION================================'
     distances = calculate_distances(subjects, signatures)
-    for threshold in np.arange(0.01, 1, 0.01):
-        print "Threshold:", threshold
-        verify(subjects, distances, threshold)
+    measures = []
+    for threshold in np.arange(0.05, 1, 0.05):
+        frr, far = verify(subjects, distances, threshold)
+        measures.append([threshold, frr, far])
+    print_far_frr_table(measures)
+    minimun = abs(measures[0][1] - measures[0][2])
+    eer = 0
+    for index, measure in enumerate(measures):
+        if minimun > abs(measure[1] - measure[2]):
+            minimun = abs(measure[1] - measure[2])
+            eer = index
+    print('  EER: %.2f %.2f %.2f' % tuple(measures[eer]))
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
-signaturizer = IrisSignaturizer(casia.subjects[:500], casia.images[:500])
+signaturizer = IrisSignaturizer(casia.subjects[:5], casia.images[:5])
 signaturizer.generate_signatures()
 iris_verification(signaturizer.subjects, signaturizer.signatures)
