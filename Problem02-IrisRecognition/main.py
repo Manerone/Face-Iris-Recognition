@@ -121,12 +121,9 @@ def iris_identification(subjects, normalized_irises):
         generate_training_and_test_sets(subjects, normalized_irises)
     model = LinearSVC(C=100.0, random_state=42)
     model.fit(training_images, training_subjects)
-    acc = 0
-    for i in xrange(len(test_images)):
-        prediction = model.predict(test_images[i].reshape(1, -1))[0]
-        if prediction == test_subjects[i]:
-            acc += 1
-    print 'Accuracy: ', acc/float(len(test_images))*100, '%'
+    predictions = model.predict(test_images)
+    accuracy = distance.hamming(test_subjects, predictions)
+    print 'Accuracy: ', (1-accuracy)*100, '%'
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
