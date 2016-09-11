@@ -32,8 +32,6 @@ Just type in the console: ```python main.py```
 Just type in the console: ```python main.py```
 
 ##### Parts
-1. Implement a function to segment and normalize iris region.
-2. Compute features: - Zero crossing Wavelet - Local Binary Patterns (LBP) - Gabor 2D Wavelets - Laplacian of Gaussian
-3. Compute metrics for Iris verification (hamming distance)
-4. Fusion of score / Multiple signatures
-5. Iris identification
+1. Function to segment and normalize iris region.
+2. Compute features: - Binary Zero crossing Wavelet for Iris verification - Local Binary Patterns (LBP) for Iris identification
+3. FAR/FRR (DET curve) and EER for Iris verification using Hamming distance - Accuracy for Iris identification using SVM and KNN
