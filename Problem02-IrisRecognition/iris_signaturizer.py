@@ -75,9 +75,9 @@ class IrisSignaturizer:
         img_with_blur = cv2.medianBlur(img, 25)
         _, im_th = cv2.threshold(img_with_blur, 25, 255, cv2.THRESH_BINARY)
         canny = cv2.Canny(im_th, 50, 200)
-        cv2.imshow("Original Image", image)
-        cv2.imshow("Thresholded Image", im_th)
-        cv2.waitKey(0)
+        # cv2.imshow("Original Image", image)
+        # cv2.imshow("Thresholded Image", im_th)
+        # cv2.waitKey(0)
         return canny
 
     def normalize_iris(self, (x_pupil, y_pupil, r_pupil),
