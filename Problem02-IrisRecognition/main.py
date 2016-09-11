@@ -127,7 +127,7 @@ def iris_identification(subjects, normalized_irises):
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
-signaturizer = IrisSignaturizer(casia.subjects[:50], casia.images[:50])
+signaturizer = IrisSignaturizer(casia.subjects, casia.images)
 signaturizer.generate_signatures()
 # iris_verification(signaturizer.subjects, signaturizer.signatures)
 iris_identification(signaturizer.subjects, signaturizer.normalized_irises)
