@@ -13,11 +13,12 @@ class IrisSignaturizer:
         self.normalized_irises = []
         self.signatures = []
 
-    # TODO: Transform this into multiprocess
+    # @@@@@@@@@@@@@@@@@@@@@@@@@ PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     def generate_signatures(self):
+        # TODO: Transform this into multiprocess
         for image in self.images:
             self.signaturize_image(image)
-
+    # @@@@@@@@@@@@@@@@@@@@@@@ END PUBLIC INTERFACE @@@@@@@@@@@@@@@@@@@@@@@@@@@@
     def signaturize_image(self, image):
         processed_img = self.pre_process_img(image)
         x_pupil, y_pupil, r_pupil = self.find_pupil(processed_img)
