@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import random
 from sklearn.svm import LinearSVC
 from local_binary_patterns import LocalBinaryPatterns
+from sys import stdout
+
+CLEAR_LINE = '\x1b[2K'
 
 
 def print_system_info():
@@ -81,7 +84,6 @@ def iris_verification(subjects, signatures):
         frr, far = verify(subjects, distances, threshold)
         measures.append([threshold, frr, far])
     print_far_frr_table(measures)
-    showMetrics(measures)
     minimun = abs(measures[0][1] - measures[0][2])
     eer = 0
     for index, measure in enumerate(measures):
@@ -89,6 +91,7 @@ def iris_verification(subjects, signatures):
             minimun = abs(measure[1] - measure[2])
             eer = index
     print('  EER: %.2f %.2f %.2f' % tuple(measures[eer]))
+    showMetrics(measures)
 
 
 def generate_training_and_test_sets(subjects, normalized_irises):
@@ -127,7 +130,11 @@ def iris_identification(subjects, normalized_irises):
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
+stdout.write('\rProcessing images...')
+stdout.flush()
 signaturizer = IrisSignaturizer(casia.subjects, casia.images)
 signaturizer.generate_signatures()
-# iris_verification(signaturizer.subjects, signaturizer.signatures)
+stdout.write('\r'+CLEAR_LINE)
+stdout.flush()
+iris_verification(signaturizer.subjects, signaturizer.signatures)
 iris_identification(signaturizer.subjects, signaturizer.normalized_irises)
