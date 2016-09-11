@@ -70,36 +70,15 @@ class IrisSignaturizer:
         return x, y, max(variations, key=itemgetter(1))[0]
 
     def pre_process_img(self, image):
-        # Threshold.
-        # Set values equal to or above 35 to 255.
-        # Set values below 35 to 0.
-
         img = image
         img_with_blur = cv2.medianBlur(img, 25)
         th, im_th = cv2.threshold(img_with_blur, 25, 255, cv2.THRESH_BINARY)
-
-        # Copy the thresholded image.
         im_floodfill = im_th.copy()
-
-        # Mask used to flood filling.
-        # Notice the size needs to be 2 pixels than the image.
         h, w = im_th.shape[:2]
         mask = np.zeros((h + 2, w + 2), np.uint8)
-
-        # Floodfill from point (0, 0)
         cv2.floodFill(im_floodfill, mask, (w / 2, h - 1), 0)
-
-        # Invert floodfilled image
         im_floodfill_inv = cv2.bitwise_not(im_floodfill)
-
-        # Combine the two images to get the foreground.
         im_out = im_th & im_floodfill_inv
-        # cv2.imshow("Original Image", image)
-        # cv2.imshow("Thresholded Image", im_th)
-        # cv2.imshow("Floodfilled Image", im_floodfill)
-        # cv2.imshow("Inverted Floodfilled Image", im_floodfill_inv)
-        # cv2.imshow("Foreground", im_out)
-        # cv2.waitKey(0)
         canny = cv2.Canny(im_out, 50, 200)
         return canny
 
