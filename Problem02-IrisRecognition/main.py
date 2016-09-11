@@ -94,8 +94,7 @@ def iris_verification(subjects, signatures):
     showMetrics(measures)
 
 
-def generate_training_and_test_sets(subjects, normalized_irises):
-    desc = LocalBinaryPatterns(24, 8)
+def generate_training_and_test_sets(subjects, irises):
     training_images = []
     training_subjects = []
     test_images = []
@@ -104,12 +103,11 @@ def generate_training_and_test_sets(subjects, normalized_irises):
     size_of_sample = int(n_of_subjects*0.1)
     indexes_to_test = random.sample(xrange(n_of_subjects), size_of_sample)
     for i in xrange(n_of_subjects):
-        hist = desc.describe(normalized_irises[i])
         if i in indexes_to_test:
-            test_images.append(hist)
+            test_images.append(irises[i])
             test_subjects.append(subjects[i])
         else:
-            training_images.append(hist)
+            training_images.append(irises[i])
             training_subjects.append(subjects[i])
     training_images = np.array(training_images)
     training_subjects = np.array(training_subjects)
@@ -118,15 +116,28 @@ def generate_training_and_test_sets(subjects, normalized_irises):
     return training_images, training_subjects, test_images, test_subjects
 
 
+def irises_lbp(normalized_irises):
+    desc = LocalBinaryPatterns(24, 8)
+    lbp_irises = []
+    for iris in normalized_irises:
+        lbp_irises.append(desc.describe(iris))
+    return lbp_irises
+
+
 def iris_identification(subjects, normalized_irises):
     print '=======================IDENTIFICATION=============================='
-    training_images, training_subjects, test_images, test_subjects = \
-        generate_training_and_test_sets(subjects, normalized_irises)
-    model = LinearSVC(C=100.0, random_state=42)
-    model.fit(training_images, training_subjects)
-    predictions = model.predict(test_images)
-    accuracy = distance.hamming(test_subjects, predictions)
-    print 'Accuracy: ', (1-accuracy)*100, '%'
+    lbp_irises = irises_lbp(normalized_irises)
+    accuracies = []
+    for _ in xrange(10):
+        training_images, training_subjects, test_images, test_subjects = \
+            generate_training_and_test_sets(subjects, lbp_irises)
+        model = LinearSVC(C=1.0, random_state=42)
+        model.fit(training_images, training_subjects)
+        predictions = model.predict(test_images)
+        accuracy = distance.hamming(test_subjects, predictions)
+        accuracies.append(accuracy)
+    print 'Accuracy: ', np.mean(accuracies)*100, '%'
+    print 'Standard Deviation: ', np.std(accuracies), '\n'
 
 print_system_info()
 casia = ImageLoaderCASIAIris('./databases/CASIA-Iris-Lamp-100')
