@@ -73,14 +73,11 @@ class IrisSignaturizer:
     def pre_process_img(self, image):
         img = image
         img_with_blur = cv2.medianBlur(img, 25)
-        th, im_th = cv2.threshold(img_with_blur, 25, 255, cv2.THRESH_BINARY)
-        im_floodfill = im_th.copy()
-        h, w = im_th.shape[:2]
-        mask = np.zeros((h + 2, w + 2), np.uint8)
-        cv2.floodFill(im_floodfill, mask, (w / 2, h - 1), 0)
-        im_floodfill_inv = cv2.bitwise_not(im_floodfill)
-        im_out = im_th & im_floodfill_inv
-        canny = cv2.Canny(im_out, 50, 200)
+        _, im_th = cv2.threshold(img_with_blur, 25, 255, cv2.THRESH_BINARY)
+        canny = cv2.Canny(im_th, 50, 200)
+        # cv2.imshow("Original Image", image)
+        # cv2.imshow("Thresholded Image", im_th)
+        # cv2.waitKey(0)
         return canny
 
     def normalize_iris(self, (x_pupil, y_pupil, r_pupil),
