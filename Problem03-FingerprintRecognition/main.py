@@ -1,20 +1,19 @@
 from rindex28_loader import Rindex28Loader
+import numpy as np
 import cv2
 
 def image_enhancement(image):
-	mean, std = cv2.meanStdDev(image)
-	i_max, j_max = image.shape
-	for i in xrange(i_max):
-		for j in xrange(j_max):
-			value = 150 + 95 * ((image[i,j] - mean)/std)
-			if value > 255:
-				value = 255
-			elif value < 0:
-				value = 0
-			image[i,j] = value
+	mean = np.mean(image)
+	std = np.std(image)
+	image_enhanced = 150 + 95 * ((image - mean)/std)
+	wrong_indexes = np.where(image_enhanced > 255)
+	image_enhanced[wrong_indexes] = 255
+	wrong_indexes = np.where(image_enhanced < 0)
+	image_enhanced[wrong_indexes] = 0
+	return np.array(image_enhanced, dtype=np.uint8)
 
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
-	image = image_enhancement(image)
-	cv2.imshow('image', image)
+	image_enhanced = image_enhancement(image)
+	cv2.imshow('image', image_enhanced)
 	cv2.waitKey(0)
