@@ -17,7 +17,6 @@ def image_enhancement(image):
 
 def average_gradient(Gx, Gy):
     average_x = (np.sum(np.square(Gx) - np.square(Gy))) / 100
-    print average_x
     average_y = np.sum(2 * Gx * Gy) / 100
     angle = np.arctan2(average_x, average_y)
     if average_x < 0 and average_y >= 0:
