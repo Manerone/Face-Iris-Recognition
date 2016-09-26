@@ -1,5 +1,6 @@
 from rindex28_loader import Rindex28Loader
 import numpy as np
+import math
 import cv2
 from matplotlib import pyplot as plt
 
@@ -19,12 +20,7 @@ def image_enhancement(image):
 def average_gradient(Gx, Gy):
     average_x = np.sum(np.square(Gx) - np.square(Gy)) / 100
     average_y = np.sum(2 * Gx * Gy) / 100
-    if average_x >= 0:
-        return np.arctan2(average_y, average_x)/2
-    elif average_x < 0 and average_y >= 0:
-        return (np.arctan2(average_y, average_x) + np.pi)/2
-    elif average_x < 0 and average_y < 0:
-        return (np.arctan2(average_y, average_x) - np.pi)/2
+    return math.atan2(average_y, average_x)/2
 
 
 def orientation_computation(image):
@@ -41,14 +37,23 @@ def orientation_computation(image):
     return orientations
 
 
+def region_of_interest_detection(image):
+    for i in xrange(30):
+        tmpImg = image[i * 10:(i + 1) * 10]
+        for j in xrange(30):
+            block = tmpImg[:, j * 10:(j + 1) * 10]
+            
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
     orientations = orientation_computation(blurred_image)
+    # interesting_image = region_of_interest_detection(image_enhanced)
     o = 0
-    for i in xrange(5, 300, 10):
-        for j in xrange(5, 300, 10):
+    for j in xrange(5, 300, 10):
+        for i in xrange(5, 300, 10):
             angle = orientations[o]
             f_point = (int(i + 7 * np.cos(angle)), int(j + 7 * np.sin(angle)))
             cv2.line(image, (i, j), f_point, (0, 0, 0))
