@@ -1,8 +1,10 @@
-from rindex28_loader import Rindex28Loader
-import numpy as np
 import math
-import cv2
+import numpy as np
 from matplotlib import pyplot as plt
+import cv2
+import copy
+from rindex28_loader import Rindex28Loader
+
 
 # cv2.imshow('', np.concatenate((sobelX, sobelY), axis=1))
 # cv2.waitKey(0)
@@ -34,27 +36,43 @@ def orientation_computation(image):
             Gx = tmpX[:, j * 10:(j + 1) * 10]
             Gy = tmpY[:, j * 10:(j + 1) * 10]
             orientations = np.append(orientations, average_gradient(Gx, Gy))
-    return orientations
+    return orientations * -1
 
 
-def insert_orientation_lines:
+def insert_orientation_lines(image_org, orientations):
+    image = copy.deepcopy(image_org)
     o = 0
-    for j in xrange(5, 300, 10):
-        for i in xrange(5, 300, 10):
+    for lin in xrange(5, 300, 10):
+        for col in xrange(5, 300, 10):
             angle = orientations[o]
-            m = np.tan(angle)
-            # x0 e y0 são o centro do bloco
-            if m > 1:
-                # varia x + 4 e x - 4
-                # calcula y = m(x-x0) + y0
-                pass
-            else:
+            n = np.tan(angle)
+            print angle*180/np.pi, n
+            if n == 0:
+                s_point = (col + 4, lin)
+                f_point = (col - 4, lin)
+                cv2.line(image, s_point, f_point, (0, 0, 0))
+            elif(np.abs(n) > 1):
+                print 'find X'
                 # varia y + 4 e y - 4
-                # calcula x = ((y - y0)/m) + x0
-                pass
-            f_point = (int(i + 7 * np.cos(angle)), int(j + 7 * np.sin(angle)))
-            cv2.line(image, (i, j), f_point, (0, 0, 0))
+                # calcula x = ((y - y0)/n) + x0
+                s_point = (col - 4, int((col - 4 - col)/n + lin))
+                f_point = (col + 4, int((col + 4 - col)/n + lin))
+                cv2.line(image, s_point, f_point, (0, 0, 0))
+                # plt.imshow(image, cmap='Greys_r')
+                # plt.show()
+            else:
+                print 'find Y'
+                # varia x + 4 e x - 4
+                # calcula y = n(x-x0) + y0
+                s_point = (int(n*(lin - 4 - lin) + col), lin - 4)
+                f_point = (int(n*(lin + 4 - lin) + col), lin + 4)
+                cv2.line(image, s_point, f_point, (0, 0, 0))
+                # plt.imshow(image, cmap='Greys_r')
+                # plt.show()
+            # cv2.line(image, s_point, f_point, (0, 0, 0))
             o += 1
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
 
 
 def region_of_interest_detection(image):
@@ -62,7 +80,6 @@ def region_of_interest_detection(image):
         tmpImg = image[i * 10:(i + 1) * 10]
         for j in xrange(30):
             block = tmpImg[:, j * 10:(j + 1) * 10]
-            
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
@@ -70,7 +87,5 @@ for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
     orientations = orientation_computation(blurred_image)
-    # interesting_image = region_of_interest_detection(image_enhanced)
     insert_orientation_lines(image, orientations)
-    plt.imshow(image, cmap='Greys_r')
-    plt.show()
+    # interesting_image = region_of_interest_detection(image_enhanced)
