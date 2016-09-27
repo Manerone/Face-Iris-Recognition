@@ -46,30 +46,20 @@ def insert_orientation_lines(image_org, orientations):
         for col in xrange(5, 300, 10):
             angle = orientations[o]
             n = np.tan(angle)
-            print angle*180/np.pi, n
             if n == 0:
                 s_point = (col + 4, lin)
                 f_point = (col - 4, lin)
-                cv2.line(image, s_point, f_point, (0, 0, 0))
             elif(np.abs(n) > 1):
-                print 'find X'
                 # varia y + 4 e y - 4
                 # calcula x = ((y - y0)/n) + x0
                 s_point = (col - 4, int((col - 4 - col)/n + lin))
                 f_point = (col + 4, int((col + 4 - col)/n + lin))
-                cv2.line(image, s_point, f_point, (0, 0, 0))
-                # plt.imshow(image, cmap='Greys_r')
-                # plt.show()
             else:
-                print 'find Y'
                 # varia x + 4 e x - 4
                 # calcula y = n(x-x0) + y0
                 s_point = (int(n*(lin - 4 - lin) + col), lin - 4)
                 f_point = (int(n*(lin + 4 - lin) + col), lin + 4)
-                cv2.line(image, s_point, f_point, (0, 0, 0))
-                # plt.imshow(image, cmap='Greys_r')
-                # plt.show()
-            # cv2.line(image, s_point, f_point, (0, 0, 0))
+            cv2.line(image, s_point, f_point, (0, 0, 0))
             o += 1
     plt.imshow(image, cmap='Greys_r')
     plt.show()
