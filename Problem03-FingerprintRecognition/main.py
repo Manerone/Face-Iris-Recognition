@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2
 import copy
+from sklearn.preprocessing import normalize
 from rindex28_loader import Rindex28Loader
 
 
@@ -36,15 +37,16 @@ def orientation_computation(image):
             Gx = tmpX[:, j * 10:(j + 1) * 10]
             Gy = tmpY[:, j * 10:(j + 1) * 10]
             orientations = np.append(orientations, average_gradient(Gx, Gy))
-    return orientations * -1
+    return np.reshape(orientations, (30, 30)) * -1
 
 
 def insert_orientation_lines(image_org, orientations):
     image = copy.deepcopy(image_org)
-    o = 0
+    lin_block = 0
     for lin in xrange(5, 300, 10):
+        col_block = 0
         for col in xrange(5, 300, 10):
-            angle = orientations[o]
+            angle = orientations[lin_block][col_block]
             n = np.tan(angle)
             if n == 0:
                 s_point = (col + 4, lin)
@@ -60,16 +62,28 @@ def insert_orientation_lines(image_org, orientations):
                 s_point = (int(n*(lin - 4 - lin) + col), lin - 4)
                 f_point = (int(n*(lin + 4 - lin) + col), lin + 4)
             cv2.line(image, s_point, f_point, (0, 0, 0))
-            o += 1
+            col_block += 1
+        lin_block += 1
     plt.imshow(image, cmap='Greys_r')
     plt.show()
 
 
-def region_of_interest_detection(image):
+def regions_of_interest(image):
+    insteresting_blocks = np.zeros((30, 30), dtype=np.bool)
+    max_distance = 150 * np.sqrt(2)
     for i in xrange(30):
         tmpImg = image[i * 10:(i + 1) * 10]
         for j in xrange(30):
             block = tmpImg[:, j * 10:(j + 1) * 10]
+            plt.imshow(block, cmap='Greys')
+            plt.show()
+            block = normalize(block, axis=1, norm='l1')
+            curret_distance = np.linalg.norm([150 - i, 150 - j])
+            distance_ratio = (max_distance - curret_distance)/max_distance
+            v = 0.5 * (1-np.mean(block)) + 0.5* np.std(block) + distance_ratio
+            if v > 0.8:
+                insteresting_blocks[i][j] = True
+    return insteresting_blocks
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
@@ -77,5 +91,15 @@ for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
     orientations = orientation_computation(blurred_image)
-    insert_orientation_lines(image, orientations)
-    # interesting_image = region_of_interest_detection(image_enhanced)
+    # insert_orientation_lines(image, orientations)
+    insteresting_blocks = regions_of_interest(image_enhanced)
+    lin_block = 0
+    for lin in xrange(5, 300, 10):
+        col_block = 0
+        for col in xrange(5, 300, 10):
+            if insteresting_blocks[lin_block][col_block]:
+                cv2.circle(image, (lin, col), 5, (0, 0, 0), -1)
+            col_block += 1
+        lin_block += 1
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
