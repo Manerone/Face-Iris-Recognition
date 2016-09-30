@@ -40,7 +40,7 @@ def orientation_computation(image):
     return np.reshape(orientations, (30, 30)) * -1
 
 
-def insert_orientation_lines(image_org, orientations):
+def show_orientation_lines(image_org, orientations):
     image = copy.deepcopy(image_org)
     lin_block = 0
     for lin in xrange(5, 300, 10):
@@ -68,22 +68,35 @@ def insert_orientation_lines(image_org, orientations):
     plt.show()
 
 
+def show_interesting_blocks(image_original, interesting_blocks):
+    image = copy.deepcopy(image_original)
+    lin_block = 0
+    for lin in xrange(5, 300, 10):
+        col_block = 0
+        for col in xrange(5, 300, 10):
+            if interesting_blocks[lin_block][col_block]:
+                cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
+            col_block += 1
+        lin_block += 1
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
+
+
 def regions_of_interest(image):
-    insteresting_blocks = np.zeros((30, 30), dtype=np.bool)
+    interesting_blocks = np.zeros((30, 30), dtype=np.bool)
     max_distance = 150 * np.sqrt(2)
     for i in xrange(30):
         tmpImg = image[i * 10:(i + 1) * 10]
         for j in xrange(30):
             block = tmpImg[:, j * 10:(j + 1) * 10]
-            plt.imshow(block, cmap='Greys')
-            plt.show()
-            block = normalize(block, axis=1, norm='l1')
             curret_distance = np.linalg.norm([150 - i, 150 - j])
             distance_ratio = (max_distance - curret_distance)/max_distance
-            v = 0.5 * (1-np.mean(block)) + 0.5* np.std(block) + distance_ratio
-            if v > 0.8:
-                insteresting_blocks[i][j] = True
-    return insteresting_blocks
+            mean = np.mean(block)/255.0
+            standard_deviation = np.std(block)/255.0
+            v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
+            if v > 0.3:
+                interesting_blocks[i][j] = True
+    return interesting_blocks
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
@@ -91,15 +104,6 @@ for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
     orientations = orientation_computation(blurred_image)
-    # insert_orientation_lines(image, orientations)
-    insteresting_blocks = regions_of_interest(image_enhanced)
-    lin_block = 0
-    for lin in xrange(5, 300, 10):
-        col_block = 0
-        for col in xrange(5, 300, 10):
-            if insteresting_blocks[lin_block][col_block]:
-                cv2.circle(image, (lin, col), 5, (0, 0, 0), -1)
-            col_block += 1
-        lin_block += 1
-    plt.imshow(image, cmap='Greys_r')
-    plt.show()
+    show_orientation_lines(image, orientations)
+    interesting_blocks = regions_of_interest(image_enhanced)
+    show_interesting_blocks(image, interesting_blocks)
