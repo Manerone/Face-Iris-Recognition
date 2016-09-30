@@ -20,24 +20,28 @@ def image_enhancement(image):
     return np.array(image_enhanced, dtype=np.uint8)
 
 
-def average_gradient(Gx, Gy):
-    average_x = np.sum(np.square(Gx) - np.square(Gy)) / 100
-    average_y = np.sum(2 * Gx * Gy) / 100
-    return math.atan2(average_y, average_x)/2
-
-
 def orientation_computation(image):
     sobelX = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
     sobelY = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
     orientations = np.array([])
+    averages_x = np.array([])
+    averages_y = np.array([])
     for i in xrange(30):
         tmpX = sobelX[i * 10:(i + 1) * 10]
         tmpY = sobelY[i * 10:(i + 1) * 10]
         for j in xrange(30):
             Gx = tmpX[:, j * 10:(j + 1) * 10]
             Gy = tmpY[:, j * 10:(j + 1) * 10]
-            orientations = np.append(orientations, average_gradient(Gx, Gy))
-    return np.reshape(orientations, (30, 30)) * -1
+            average_x = np.sum(np.square(Gx) - np.square(Gy)) / 100
+            average_y = np.sum(2 * Gx * Gy) / 100
+            angle = math.atan2(average_y, average_x)/2
+            averages_x = np.append(averages_x, average_x)
+            averages_y = np.append(averages_y, average_y)
+            orientations = np.append(orientations, angle)
+    orientations = np.reshape(orientations, (30, 30)) * -1
+    averages_x = np.reshape(averages_x, (30, 30))
+    averages_y = np.reshape(averages_y, (30, 30))
+    return orientations, averages_x, averages_y
 
 
 def show_orientation_lines(image_org, orientations):
@@ -94,16 +98,34 @@ def regions_of_interest(image):
             mean = np.mean(block)/255.0
             standard_deviation = np.std(block)/255.0
             v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
-            if v > 0.3:
+            if v > 0.27:
                 interesting_blocks[i][j] = True
     return interesting_blocks
+
+
+def smooth_block(block):
+    filter = np.array([[1, 1, 1], [1, 2, 1], [1, 1, 1]])
+    return np.sum(np.multiply(block, filter))
+
+
+def smooth_orientations(averages_x, averages_y, interesting_blocks):
+    orientations = np.zeros((30, 30))
+    for lin in xrange(1, 29):
+        for col in xrange(1, 29):
+            if interesting_blocks[lin, col]:
+                a = smooth_block(averages_x[lin - 1:lin + 2, col - 1:col + 2])
+                b = smooth_block(averages_y[lin - 1:lin + 2, col - 1:col + 2])
+                orientations[lin][col] = math.atan2(b, a)/2
+    return orientations * -1
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
-    orientations = orientation_computation(blurred_image)
+    orientations, averages_x, averages_y = orientation_computation(blurred_image)
     show_orientation_lines(image, orientations)
     interesting_blocks = regions_of_interest(image_enhanced)
     show_interesting_blocks(image, interesting_blocks)
+    smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
+    show_orientation_lines(image, smoothed_orientations)
