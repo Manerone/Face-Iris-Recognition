@@ -20,6 +20,16 @@ def image_enhancement(image):
     return np.array(image_enhanced, dtype=np.uint8)
 
 
+def calculate_angle(x, y):
+    angle = np.arctan2(y, x) / 2
+    if x >= 0:
+        return angle
+    if x < 0 and y >= 0:
+        return (angle + np.pi)
+    if x < 0 and y < 0:
+        return (angle - np.pi)
+
+
 def orientation_computation(image):
     sobelX = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
     sobelY = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=3)
@@ -34,11 +44,12 @@ def orientation_computation(image):
             Gy = tmpY[:, j * 10:(j + 1) * 10]
             average_x = np.sum(np.square(Gx) - np.square(Gy)) / 100
             average_y = np.sum(2 * Gx * Gy) / 100
-            angle = math.atan2(average_y, average_x)/2
+            angle = calculate_angle(average_x, average_y)
             averages_x = np.append(averages_x, average_x)
             averages_y = np.append(averages_y, average_y)
             orientations = np.append(orientations, angle)
-    orientations = np.reshape(orientations, (30, 30)) * -1
+    orientations = np.reshape(orientations, (30, 30))
+    print orientations * 180/np.pi
     averages_x = np.reshape(averages_x, (30, 30))
     averages_y = np.reshape(averages_y, (30, 30))
     return orientations, averages_x, averages_y
@@ -119,13 +130,43 @@ def smooth_orientations(averages_x, averages_y, interesting_blocks):
     return orientations * -1
 
 
+def poincare(block):
+    sum1 = (block[1][0] - block[0][0]) + (block[2][0] - block[1][0]) + (block[2][1] - block[2][0])
+    sum2 = (block[2][2] - block[2][1]) + (block[1][2] - block[2][2]) + (block[0][2] - block[1][2])
+    sum3 = (block[0][1] - block[0][2]) + (block[0][0] - block[0][1]) 
+    return (sum1 + sum2 + sum3)
+
+
+def singular_points_detection(orientations, interesting_blocks):
+    singular_points = np.zeros((30, 30))
+    for lin in xrange(1, 29):
+        for col in xrange(1, 29):
+            block = interesting_blocks[lin - 1:lin + 2, col - 1:col + 2]
+            if np.all(block == True):
+                print orientations[lin - 1:lin + 2, col - 1:col + 2]*180/np.pi
+                sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2]*180/np.pi)
+                print sum
+                singular_points[lin][col] = sum
+    return singular_points
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
+
     orientations, averages_x, averages_y = orientation_computation(blurred_image)
     show_orientation_lines(image, orientations)
+
     interesting_blocks = regions_of_interest(image_enhanced)
-    show_interesting_blocks(image, interesting_blocks)
+    # show_interesting_blocks(image, interesting_blocks)
+
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
     show_orientation_lines(image, smoothed_orientations)
+    # singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
+    # for lin in xrange(30):
+    #     for col in xrange(30):
+    #         if np.abs(singular_points[lin][col]) >= 180:
+    #             cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
+    # plt.imshow(image, cmap='Greys_r')
+    # plt.show()
