@@ -49,7 +49,6 @@ def orientation_computation(image):
             averages_y = np.append(averages_y, average_y)
             orientations = np.append(orientations, angle)
     orientations = np.reshape(orientations, (30, 30)) * -1
-    print orientations * 180/np.pi
     averages_x = np.reshape(averages_x, (30, 30))
     averages_y = np.reshape(averages_y, (30, 30))
     return orientations, averages_x, averages_y
