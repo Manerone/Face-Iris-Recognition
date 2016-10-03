@@ -14,20 +14,10 @@ from rindex28_loader import Rindex28Loader
 def image_enhancement(image):
     mean = np.mean(image)
     std = np.std(image)
-    image_enhanced = 150 + 95 * ((image - mean) / std)
+    image_enhanced = 150 + 95 * ((image - mean) / float(std))
     image_enhanced[image_enhanced > 255] = 255
     image_enhanced[image_enhanced < 0] = 0
     return np.array(image_enhanced, dtype=np.uint8)
-
-
-def calculate_angle(x, y):
-    angle = np.arctan2(y, x) / 2
-    if x >= 0:
-        return angle
-    if x < 0 and y >= 0:
-        return (angle + np.pi)
-    if x < 0 and y < 0:
-        return (angle - np.pi)
 
 
 def orientation_computation(image):
@@ -42,9 +32,9 @@ def orientation_computation(image):
         for j in xrange(30):
             Gx = tmpX[:, j * 10:(j + 1) * 10]
             Gy = tmpY[:, j * 10:(j + 1) * 10]
-            average_x = np.sum(np.square(Gx) - np.square(Gy)) / 100
-            average_y = np.sum(2 * Gx * Gy) / 100
-            angle = calculate_angle(average_x, average_y)
+            average_x = np.sum(np.square(Gx) - np.square(Gy)) / float(100)
+            average_y = np.sum(2 * Gx * Gy) / float(100)
+            angle = math.atan2(average_y, average_x)/float(2)
             averages_x = np.append(averages_x, average_x)
             averages_y = np.append(averages_y, average_y)
             orientations = np.append(orientations, angle)
@@ -101,9 +91,9 @@ def regions_of_interest(image):
         for j in xrange(30):
             block = tmpImg[:, j * 10:(j + 1) * 10]
             curret_distance = np.linalg.norm([150 - i, 150 - j])
-            distance_ratio = (max_distance - curret_distance)/max_distance
-            mean = np.mean(block)/255.0
-            standard_deviation = np.std(block)/255.0
+            distance_ratio = (max_distance - curret_distance)/float(max_distance)
+            mean = np.mean(block)/float(255)
+            standard_deviation = np.std(block)/float(255)
             v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
             if v > 0.27:
                 interesting_blocks[i][j] = True
@@ -122,15 +112,23 @@ def smooth_orientations(averages_x, averages_y, interesting_blocks):
             if interesting_blocks[lin, col]:
                 a = smooth_block(averages_x[lin - 1:lin + 2, col - 1:col + 2])
                 b = smooth_block(averages_y[lin - 1:lin + 2, col - 1:col + 2])
-                orientations[lin][col] = math.atan2(b, a)/2
+                orientations[lin][col] = math.atan2(b, a)/float(2)
     return orientations * -1
 
 
+def delta(value):
+    if abs(value) < np.pi/float(2):
+        return value
+    if value <= -np.pi/float(2):
+        return np.pi + value
+    return np.pi - value
+
+
 def poincare(block):
-    sum1 = (block[0][0] - block[1][0]) + (block[1][0] - block[2][0]) + (block[2][0] - block[2][1])
-    sum2 = (block[2][1] - block[2][2]) + (block[2][2] - block[1][2]) + (block[1][2] - block[0][2])
-    sum3 = (block[0][2] - block[0][1]) + (block[0][1] - block[0][0]) 
-    return (sum1 + sum2 + sum3)
+    sum1 = delta(block[0][0] - block[1][0]) + delta(block[1][0] - block[2][0]) + delta(block[2][0] - block[2][1])
+    sum2 = delta(block[2][1] - block[2][2]) + delta(block[2][2] - block[1][2]) + delta(block[1][2] - block[0][2])
+    sum3 = delta(block[0][2] - block[0][1]) + delta(block[0][1] - block[0][0]) 
+    return (sum1 + sum2 + sum3)/float(np.pi*2)
 
 
 def singular_points_detection(orientations, interesting_blocks):
@@ -140,6 +138,7 @@ def singular_points_detection(orientations, interesting_blocks):
             block = interesting_blocks[lin - 1:lin + 2, col - 1:col + 2]
             if np.all(block == True):
                 sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2])
+                print sum
                 singular_points[lin][col] = sum
     return singular_points
 
@@ -158,10 +157,13 @@ for image in rindex28.images:
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
     # show_orientation_lines(image, smoothed_orientations)
     singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
-    print singular_points
-    for lin in xrange(30):
-        for col in xrange(30):
-            if np.abs(singular_points[lin][col]) >= np.pi:
+    lin_block = 0
+    for lin in xrange(5, 300, 10):
+        col_block = 0
+        for col in xrange(5, 300, 10):
+            if 0.4 <= np.abs(singular_points[lin_block][col_block]) <= 0.6 :
                 cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
+            col_block += 1
+        lin_block += 1
     plt.imshow(image, cmap='Greys_r')
     plt.show()
