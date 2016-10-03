@@ -148,13 +148,13 @@ for image in rindex28.images:
     blurred_image = cv2.medianBlur(image_enhanced, 5)
 
     orientations, averages_x, averages_y = orientation_computation(blurred_image)
-    # show_orientation_lines(image, orientations)
+    show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
     show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
-    # show_orientation_lines(image, smoothed_orientations)
+    show_orientation_lines(image, smoothed_orientations)
     singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
     lin_block = 0
     for lin in xrange(5, 300, 10):
