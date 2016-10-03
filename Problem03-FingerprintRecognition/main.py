@@ -95,7 +95,7 @@ def regions_of_interest(image):
             mean = np.mean(block)/float(255)
             standard_deviation = np.std(block)/float(255)
             v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
-            if v > 0.27:
+            if v > 0.35:
                 interesting_blocks[i][j] = True
     return interesting_blocks
 
@@ -138,7 +138,6 @@ def singular_points_detection(orientations, interesting_blocks):
             block = interesting_blocks[lin - 1:lin + 2, col - 1:col + 2]
             if np.all(block == True):
                 sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2])
-                print sum
                 singular_points[lin][col] = sum
     return singular_points
 
@@ -152,7 +151,7 @@ for image in rindex28.images:
     # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
-    # show_interesting_blocks(image, interesting_blocks)
+    show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
     # show_orientation_lines(image, smoothed_orientations)
@@ -161,8 +160,10 @@ for image in rindex28.images:
     for lin in xrange(5, 300, 10):
         col_block = 0
         for col in xrange(5, 300, 10):
-            if 0.4 <= np.abs(singular_points[lin_block][col_block]) <= 0.6 :
-                cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
+            if 0.4 <= singular_points[lin_block][col_block] <= 0.6 :
+                cv2.circle(image, (col, lin), 4, (0, 0, 0), -1)
+            if -0.4 >= singular_points[lin_block][col_block] >= -0.6 :
+                cv2.rectangle(image, (col, lin), (col+4, lin+4), (0,0,0))
             col_block += 1
         lin_block += 1
     plt.imshow(image, cmap='Greys_r')
