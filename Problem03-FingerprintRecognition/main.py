@@ -48,7 +48,7 @@ def orientation_computation(image):
             averages_x = np.append(averages_x, average_x)
             averages_y = np.append(averages_y, average_y)
             orientations = np.append(orientations, angle)
-    orientations = np.reshape(orientations, (30, 30))
+    orientations = np.reshape(orientations, (30, 30)) * -1
     print orientations * 180/np.pi
     averages_x = np.reshape(averages_x, (30, 30))
     averages_y = np.reshape(averages_y, (30, 30))
@@ -63,10 +63,7 @@ def show_orientation_lines(image_org, orientations):
         for col in xrange(5, 300, 10):
             angle = orientations[lin_block][col_block]
             n = np.tan(angle)
-            if n == 0:
-                s_point = (col + 4, lin)
-                f_point = (col - 4, lin)
-            elif(np.abs(n) > 1):
+            if(np.abs(n) > 1):
                 # varia y + 4 e y - 4
                 # calcula x = ((y - y0)/n) + x0
                 s_point = (col - 4, int((col - 4 - col)/n + lin))
