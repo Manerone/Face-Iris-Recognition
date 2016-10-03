@@ -128,9 +128,9 @@ def smooth_orientations(averages_x, averages_y, interesting_blocks):
 
 
 def poincare(block):
-    sum1 = (block[1][0] - block[0][0]) + (block[2][0] - block[1][0]) + (block[2][1] - block[2][0])
-    sum2 = (block[2][2] - block[2][1]) + (block[1][2] - block[2][2]) + (block[0][2] - block[1][2])
-    sum3 = (block[0][1] - block[0][2]) + (block[0][0] - block[0][1]) 
+    sum1 = (block[0][0] - block[1][0]) + (block[1][0] - block[2][0]) + (block[2][0] - block[2][1])
+    sum2 = (block[2][1] - block[2][2]) + (block[2][2] - block[1][2]) + (block[1][2] - block[0][2])
+    sum3 = (block[0][2] - block[0][1]) + (block[0][1] - block[0][0]) 
     return (sum1 + sum2 + sum3)
 
 
@@ -140,9 +140,7 @@ def singular_points_detection(orientations, interesting_blocks):
         for col in xrange(1, 29):
             block = interesting_blocks[lin - 1:lin + 2, col - 1:col + 2]
             if np.all(block == True):
-                print orientations[lin - 1:lin + 2, col - 1:col + 2]*180/np.pi
-                sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2]*180/np.pi)
-                print sum
+                sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2])
                 singular_points[lin][col] = sum
     return singular_points
 
@@ -153,17 +151,18 @@ for image in rindex28.images:
     blurred_image = cv2.medianBlur(image_enhanced, 5)
 
     orientations, averages_x, averages_y = orientation_computation(blurred_image)
-    show_orientation_lines(image, orientations)
+    # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
     # show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
-    show_orientation_lines(image, smoothed_orientations)
-    # singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
-    # for lin in xrange(30):
-    #     for col in xrange(30):
-    #         if np.abs(singular_points[lin][col]) >= 180:
-    #             cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
-    # plt.imshow(image, cmap='Greys_r')
-    # plt.show()
+    # show_orientation_lines(image, smoothed_orientations)
+    singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
+    print singular_points
+    for lin in xrange(30):
+        for col in xrange(30):
+            if np.abs(singular_points[lin][col]) >= np.pi:
+                cv2.circle(image, (col, lin), 2, (0, 0, 0), -1)
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
