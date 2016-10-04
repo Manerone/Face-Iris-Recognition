@@ -142,29 +142,36 @@ def singular_points_detection(orientations, interesting_blocks):
     return singular_points
 
 
+def show_singular_points(image_original, singular_points):
+    image = copy.deepcopy(image_original)
+    error_lim = 0.2
+    lin_block = 0
+    for lin in xrange(5, 300, 10):
+        col_block = 0
+        for col in xrange(5, 300, 10):
+            if 0.5 - error_lim <= singular_points[lin_block][col_block] <= 0.5 + error_lim:
+                cv2.circle(image, (col, lin), 4, (0, 0, 0), -1)
+            if -0.5 - error_lim <= singular_points[lin_block][col_block] <= -0.5 + error_lim :
+                cv2.rectangle(image, (col, lin), (col+4, lin+4), (0,0,0))
+            col_block += 1
+        lin_block += 1
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
 
     orientations, averages_x, averages_y = orientation_computation(blurred_image)
-    show_orientation_lines(image, orientations)
+    # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
-    show_interesting_blocks(image, interesting_blocks)
+    # show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
-    show_orientation_lines(image, smoothed_orientations)
+    # show_orientation_lines(image, smoothed_orientations)
+
     singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
-    lin_block = 0
-    for lin in xrange(5, 300, 10):
-        col_block = 0
-        for col in xrange(5, 300, 10):
-            if 0.4 <= singular_points[lin_block][col_block] <= 0.6 :
-                cv2.circle(image, (col, lin), 4, (0, 0, 0), -1)
-            if -0.4 >= singular_points[lin_block][col_block] >= -0.6 :
-                cv2.rectangle(image, (col, lin), (col+4, lin+4), (0,0,0))
-            col_block += 1
-        lin_block += 1
-    plt.imshow(image, cmap='Greys_r')
-    plt.show()
+    show_singular_points(image, singular_points)
