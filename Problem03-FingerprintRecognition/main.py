@@ -238,6 +238,37 @@ def classify(cores, deltas, image):
     return 'others'
 
 
+def find_percent_in_hist(hist, value):
+    n_pixels = np.sum(hist)
+    current = 0.0
+    for i in xrange(len(hist)):
+        current += hist[i]/float(n_pixels)
+        if current >= value:
+            break
+    return i
+
+
+def image_binarization(image_original):
+    histogram = cv2.calcHist([image_original], [0], None, [256], [0, 256])
+    p25 = find_percent_in_hist(histogram, 0.25)
+    p50 = find_percent_in_hist(histogram, 0.5)
+
+    def binarize(block):
+        center = block[len(block)/2]
+        if center < p25:
+            return 0
+        elif center > p50:
+            return 255
+        else:
+            sum = (np.sum(block) - center)/8.0
+            if sum >= center:
+                return 255
+            else:
+                return 0
+    image = ndimage.filters.generic_filter(image_original, binarize, (3, 3))
+    return image
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
@@ -261,4 +292,9 @@ for image in rindex28.images:
     )
     classification = classify(cores, deltas, interesting_blocks)
 
-    show_singular_points(image, cores, deltas, title=classification)
+    # show_singular_points(image, cores, deltas, title=classification)
+
+    binarized_image = image_binarization(image_enhanced)
+
+    plt.imshow(binarized_image, cmap='Greys_r')
+    plt.show()
