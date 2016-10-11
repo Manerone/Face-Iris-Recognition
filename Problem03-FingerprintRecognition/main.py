@@ -191,7 +191,7 @@ def is_core(value):
     return (-0.5 - error_lim <= value <= -0.5 + error_lim)
 
 
-def show_singular_points(image_original, cores, deltas):
+def show_singular_points(image_original, cores, deltas, title=''):
     image = copy.deepcopy(image_original)
     for coord in cores:
         coord = reverse_tuple(coord)
@@ -200,6 +200,7 @@ def show_singular_points(image_original, cores, deltas):
         coord = reverse_tuple(coord)
         cv2.circle(image, coord, 4, (0, 0, 0), -1)
     plt.imshow(image, cmap='Greys_r')
+    plt.title(title)
     plt.show()
 
 
@@ -207,12 +208,44 @@ def reverse_tuple(tuple):
     return tuple[::-1]
 
 
+def classify_deltas(deltas, image):
+    left_deltas = 0
+    right_deltas = 0
+    center_deltas = 0
+    width = 300
+    for delta in deltas:
+        if delta[1] < width/3.0:
+            left_deltas += 1
+        elif delta[1] < 2 * width/3.0:
+            center_deltas += 1
+        else:
+            right_deltas += 1
+    return left_deltas, center_deltas, right_deltas
+
+
+def classify(cores, deltas, image):
+    cores = len(cores)
+    left_deltas, center_deltas, right_deltas = classify_deltas(deltas, image)
+    total_deltas = left_deltas + center_deltas + right_deltas
+    if cores == 1 and right_deltas == 1:
+        return 'left loop'
+    if cores == 1 and left_deltas == 1:
+        return 'right loop'
+    if cores == 1 and 0 <= center_deltas <= 1:
+        return 'arch'
+    if cores == 2 and 0 <= total_deltas <= 2:
+        return 'whorl'
+    return 'others'
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
     blurred_image = cv2.medianBlur(image_enhanced, 5)
 
-    orientations, averages_x, averages_y = orientation_computation(blurred_image)
+    orientations, averages_x, averages_y = orientation_computation(
+        blurred_image
+    )
     # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
@@ -226,6 +259,6 @@ for image in rindex28.images:
     cores, deltas = singular_points_detection(
         smoothed_orientations, interesting_blocks
     )
-    show_singular_points(image, cores, deltas)
+    classification = classify(cores, deltas, interesting_blocks)
 
-    # classification = classify(n_of_cores, n_of_deltas)
+    show_singular_points(image, cores, deltas, title=classification)
