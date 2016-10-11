@@ -185,13 +185,17 @@ def is_core(value):
 def show_singular_points(image_original, cores, deltas):
     image = copy.deepcopy(image_original)
     for coord in cores:
-        coord = coord[::-1]
+        coord = reverse_tuple(coord)
         cv2.rectangle(image, coord, (coord[0]+4, coord[1]+4), (0, 0, 0))
     for coord in deltas:
-        coord = coord[::-1]
+        coord = reverse_tuple(coord)
         cv2.circle(image, coord, 4, (0, 0, 0), -1)
     plt.imshow(image, cmap='Greys_r')
     plt.show()
+
+
+def reverse_tuple(tuple):
+    return tuple[::-1]
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
