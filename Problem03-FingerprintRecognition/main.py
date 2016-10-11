@@ -151,11 +151,14 @@ def singular_points_detection(orientations, interesting_blocks):
             sum = poincare_matrix[lin][col]
             point_block = (lin, col)
             point_original = ((lin * 10) + 5, (col * 10) + 5)
+            if not block_all_true(lin, col, interesting_blocks):
+                continue
             if is_delta(sum):
                 if not deltas:
                     deltas.append(point_original)
                 else:
                     last_delta = deltas[-1]
+                    last_delta = ((last_delta[0] - 5)/10, (last_delta[1] - 5)/10)
                     if eucli_distance(point_block, last_delta) > min_distance:
                         deltas.append(point_original)
             if is_core(sum):
@@ -163,9 +166,15 @@ def singular_points_detection(orientations, interesting_blocks):
                     cores.append(point_original)
                 else:
                     last_core = cores[-1]
+                    last_core = ((last_core[0] - 5)/10, (last_core[1] - 5)/10)
                     if eucli_distance(point_block, last_core) > min_distance:
                         cores.append(point_original)
     return cores, deltas
+
+
+def block_all_true(lin, col, matrix):
+    block = matrix[lin - 1:lin + 2, col - 1:col + 2]
+    return np.all(block)
 
 
 def eucli_distance(point1, point2):
