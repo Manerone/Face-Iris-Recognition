@@ -14,6 +14,7 @@ from rindex28_loader import Rindex28Loader
 
 ERROR_LIM = 0.16
 
+
 def image_enhancement(image):
     mean = np.mean(image)
     std = np.std(image)
@@ -88,13 +89,13 @@ def show_interesting_blocks(image_original, interesting_blocks):
 
 def regions_of_interest(image):
     interesting_blocks = np.zeros((30, 30), dtype=np.bool)
-    max_distance = 150 * np.sqrt(2)
+    max_distance = float(150 * np.sqrt(2))
     for i in xrange(30):
         tmpImg = image[i * 10:(i + 1) * 10]
         for j in xrange(30):
             block = tmpImg[:, j * 10:(j + 1) * 10]
             curret_distance = np.linalg.norm([150 - i, 150 - j])
-            distance_ratio = (max_distance - curret_distance)/float(max_distance)
+            distance_ratio = (max_distance - curret_distance)/max_distance
             mean = np.mean(block)/float(255)
             standard_deviation = np.std(block)/float(255)
             v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
@@ -129,17 +130,22 @@ def delta(value):
 
 def poincare(block):
     block = block.reshape((3, 3))
-    sum1 = delta(block[0][0] - block[1][0]) + delta(block[1][0] - block[2][0]) + delta(block[2][0] - block[2][1])
-    sum2 = delta(block[2][1] - block[2][2]) + delta(block[2][2] - block[1][2]) + delta(block[1][2] - block[0][2])
-    sum3 = delta(block[0][2] - block[0][1]) + delta(block[0][1] - block[0][0]) 
+    sum1 = delta(block[0][0] - block[1][0]) + delta(block[1][0] - block[2][0])
+    sum1 += delta(block[2][0] - block[2][1])
+    sum2 = delta(block[2][1] - block[2][2]) + delta(block[2][2] - block[1][2])
+    sum2 += delta(block[1][2] - block[0][2])
+    sum3 = delta(block[0][2] - block[0][1]) + delta(block[0][1] - block[0][0])
     return (sum1 + sum2 + sum3)/float(np.pi*2)
 
 
 def singular_points_detection(orientations, interesting_blocks):
     cores = []
     deltas = []
-    poincare_matrix = ndimage.filters.generic_filter(orientations, poincare, (3, 3))
+    poincare_matrix = ndimage.filters.generic_filter(
+        orientations, poincare, (3, 3)
+    )
     lin_max, col_max = poincare_matrix.shape
+    min_distance = 2 * math.sqrt(2)
     for lin in xrange(1, lin_max):
         for col in xrange(1, col_max):
             sum = poincare_matrix[lin][col]
@@ -150,16 +156,20 @@ def singular_points_detection(orientations, interesting_blocks):
                     deltas.append(point_original)
                 else:
                     last_delta = deltas[-1]
-                    if distance.euclidean(point_block, last_delta) > 2 * math.sqrt(2):
+                    if eucli_distance(point_block, last_delta) > min_distance:
                         deltas.append(point_original)
-            if  is_core(sum):
+            if is_core(sum):
                 if not cores:
                     cores.append(point_original)
                 else:
                     last_core = cores[-1]
-                    if distance.euclidean(point_block, last_core) > 2 * math.sqrt(2):
+                    if eucli_distance(point_block, last_core) > min_distance:
                         cores.append(point_original)
     return cores, deltas
+
+
+def eucli_distance(point1, point2):
+    return distance.euclidean(point1, point2)
 
 
 def is_delta(value):
@@ -176,7 +186,7 @@ def show_singular_points(image_original, cores, deltas):
     image = copy.deepcopy(image_original)
     for coord in cores:
         coord = coord[::-1]
-        cv2.rectangle(image, coord, (coord[0]+4, coord[1]+4), (0,0,0))
+        cv2.rectangle(image, coord, (coord[0]+4, coord[1]+4), (0, 0, 0))
     for coord in deltas:
         coord = coord[::-1]
         cv2.circle(image, coord, 4, (0, 0, 0), -1)
@@ -195,10 +205,14 @@ for image in rindex28.images:
     interesting_blocks = regions_of_interest(image_enhanced)
     # show_interesting_blocks(image, interesting_blocks)
 
-    smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
+    smoothed_orientations = smooth_orientations(
+        averages_x, averages_y, interesting_blocks
+    )
     # show_orientation_lines(image, smoothed_orientations)
 
-    cores, deltas = singular_points_detection(smoothed_orientations, interesting_blocks)
+    cores, deltas = singular_points_detection(
+        smoothed_orientations, interesting_blocks
+    )
     show_singular_points(image, cores, deltas)
 
     # classification = classify(n_of_cores, n_of_deltas)
