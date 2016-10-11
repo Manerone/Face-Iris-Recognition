@@ -184,28 +184,6 @@ def show_singular_points(image_original, cores, deltas):
     plt.show()
 
 
-def zero_neighborhood(matrix, lin, col, size=5):
-    middle = size/2
-    upper_left_line = lin - middle
-    upper_left_column = col - middle
-    filter = np.zeros((size, size))
-    filter[middle][middle] = 1.0
-    for i in xrange(size):
-        for j in xrange(size):
-            matrix[upper_left_line + i][upper_left_column + j] *= filter[i][j]
-
-def normalize_singular_points(singular_points):
-    error_lim = 0.2
-    normalized_singular_points = copy.deepcopy(singular_points)
-    for lin in xrange(1, 29):
-        for col in xrange(1, 29):
-            if 0.5 - error_lim <= np.abs(normalized_singular_points[lin][col]) <= 0.5 + error_lim:
-                zero_neighborhood(normalized_singular_points, lin, col)
-            else:
-                normalized_singular_points[lin][col] = 0.0
-    return normalized_singular_points
-
-
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
