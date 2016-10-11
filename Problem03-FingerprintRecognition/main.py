@@ -3,13 +3,16 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cv2
 import copy
-from sklearn.preprocessing import normalize
+from scipy import ndimage
+from scipy.spatial import distance
 from rindex28_loader import Rindex28Loader
 
 
 # cv2.imshow('', np.concatenate((sobelX, sobelY), axis=1))
 # cv2.waitKey(0)
 
+
+ERROR_LIM = 0.16
 
 def image_enhancement(image):
     mean = np.mean(image)
@@ -125,6 +128,7 @@ def delta(value):
 
 
 def poincare(block):
+    block = block.reshape((3, 3))
     sum1 = delta(block[0][0] - block[1][0]) + delta(block[1][0] - block[2][0]) + delta(block[2][0] - block[2][1])
     sum2 = delta(block[2][1] - block[2][2]) + delta(block[2][2] - block[1][2]) + delta(block[1][2] - block[0][2])
     sum3 = delta(block[0][2] - block[0][1]) + delta(block[0][1] - block[0][0]) 
@@ -132,29 +136,50 @@ def poincare(block):
 
 
 def singular_points_detection(orientations, interesting_blocks):
-    singular_points = np.zeros((30, 30))
-    for lin in xrange(1, 29):
-        for col in xrange(1, 29):
-            block = interesting_blocks[lin - 1:lin + 2, col - 1:col + 2]
-            if np.all(block == True):
-                sum = poincare(orientations[lin - 1:lin + 2, col - 1:col + 2])
-                singular_points[lin][col] = sum
-    return singular_points
+    cores = []
+    deltas = []
+    poincare_matrix = ndimage.filters.generic_filter(orientations, poincare, (3, 3))
+    lin_max, col_max = poincare_matrix.shape
+    for lin in xrange(1, lin_max):
+        for col in xrange(1, col_max):
+            sum = poincare_matrix[lin][col]
+            point_block = (lin, col)
+            point_original = ((lin * 10) + 5, (col * 10) + 5)
+            if is_delta(sum):
+                if not deltas:
+                    deltas.append(point_original)
+                else:
+                    last_delta = deltas[-1]
+                    if distance.euclidean(point_block, last_delta) > 2 * math.sqrt(2):
+                        deltas.append(point_original)
+            if  is_core(sum):
+                if not cores:
+                    cores.append(point_original)
+                else:
+                    last_core = cores[-1]
+                    if distance.euclidean(point_block, last_core) > 2 * math.sqrt(2):
+                        cores.append(point_original)
+    return cores, deltas
 
 
-def show_singular_points(image_original, singular_points):
+def is_delta(value):
+    error_lim = ERROR_LIM
+    return (0.5 - error_lim <= value <= 0.5 + error_lim)
+
+
+def is_core(value):
+    error_lim = ERROR_LIM
+    return (-0.5 - error_lim <= value <= -0.5 + error_lim)
+
+
+def show_singular_points(image_original, cores, deltas):
     image = copy.deepcopy(image_original)
-    error_lim = 0.2
-    lin_block = 0
-    for lin in xrange(5, 300, 10):
-        col_block = 0
-        for col in xrange(5, 300, 10):
-            if 0.5 - error_lim <= singular_points[lin_block][col_block] <= 0.5 + error_lim:
-                cv2.circle(image, (col, lin), 4, (0, 0, 0), -1)
-            if -0.5 - error_lim <= singular_points[lin_block][col_block] <= -0.5 + error_lim :
-                cv2.rectangle(image, (col, lin), (col+4, lin+4), (0,0,0))
-            col_block += 1
-        lin_block += 1
+    for coord in cores:
+        coord = coord[::-1]
+        cv2.rectangle(image, coord, (coord[0]+4, coord[1]+4), (0,0,0))
+    for coord in deltas:
+        coord = coord[::-1]
+        cv2.circle(image, coord, 4, (0, 0, 0), -1)
     plt.imshow(image, cmap='Greys_r')
     plt.show()
 
@@ -195,8 +220,7 @@ for image in rindex28.images:
     smoothed_orientations = smooth_orientations(averages_x, averages_y, interesting_blocks)
     # show_orientation_lines(image, smoothed_orientations)
 
-    singular_points = singular_points_detection(smoothed_orientations, interesting_blocks)
-    # show_singular_points(image, singular_points)
+    cores, deltas = singular_points_detection(smoothed_orientations, interesting_blocks)
+    show_singular_points(image, cores, deltas)
 
-    normalized_singular_points = normalize_singular_points(singular_points)
-    show_singular_points(image, normalized_singular_points)
+    # classification = classify(n_of_cores, n_of_deltas)
