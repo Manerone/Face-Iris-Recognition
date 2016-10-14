@@ -40,4 +40,4 @@ class Rindex28Loader(object):
             path_to_element = os.path.join(path, element)
             if os.path.isfile(path_to_element):
                 files.append(path_to_element)
-        return files
+        return np.sort(files)
