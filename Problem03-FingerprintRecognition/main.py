@@ -5,6 +5,8 @@ import cv2
 import copy
 from scipy import ndimage
 from scipy.spatial import distance
+from scipy import signal 
+from skimage.morphology import skeletonize
 from rindex28_loader import Rindex28Loader
 
 
@@ -21,7 +23,7 @@ def image_enhancement(image):
     image_enhanced = 150 + 95 * ((image - mean) / float(std))
     image_enhanced[image_enhanced > 255] = 255
     image_enhanced[image_enhanced < 0] = 0
-    return np.array(image_enhanced, dtype=np.uint8)
+    return np.array(image_enhanced)
 
 
 def orientation_computation(image):
@@ -240,39 +242,84 @@ def classify(cores, deltas, image):
 
 def find_percent_in_hist(hist, value):
     n_pixels = np.sum(hist)
-    current = 0.0
+    current = 0
     for i in xrange(len(hist)):
-        current += hist[i]/float(n_pixels)
-        if current >= value:
+        current += hist[i]
+        if current/float(n_pixels) >= value:
             break
     return i
 
 
 def image_binarization(image_original):
-    histogram = cv2.calcHist([image_original], [0], None, [256], [0, 256])
+    img = copy.deepcopy(image_original)
+    histogram, bins = np.histogram(img.ravel(), 256, [0, 256])
     p25 = find_percent_in_hist(histogram, 0.25)
     p50 = find_percent_in_hist(histogram, 0.5)
 
     def binarize(block):
-        center = block[len(block)/2]
+        center = block[(len(block)/2) + 1]
+        block_mean = np.mean(block)
         if center < p25:
             return 0
         elif center > p50:
             return 255
         else:
             sum = (np.sum(block) - center)/8.0
-            if sum >= center:
+            if sum >= block_mean:
                 return 255
             else:
                 return 0
-    image = ndimage.filters.generic_filter(image_original, binarize, (3, 3))
-    return image
+    image = ndimage.filters.generic_filter(img, binarize, (3, 3))
+    return np.array(image)
+
+
+def smooth_filter_5(block):
+    center_index = len(block)/2
+    center = block[center_index]
+    neighbors = np.delete(block, center_index)
+    n_of_whites = len(np.where(neighbors == 255))
+    n_of_blacks = len(np.where(neighbors == 0))
+    if n_of_whites >= 18:
+        return 255
+    elif n_of_blacks >= 18:
+        return 0
+    else:
+        return center
+
+
+def smooth_filter_3(block):
+    center_index = len(block)/2
+    center = block[center_index]
+    neighbors = np.delete(block, center_index)
+    n_of_whites = len(np.where(neighbors == 255))
+    n_of_blacks = len(np.where(neighbors == 0))
+    if n_of_whites >= 5:
+        return 255
+    elif n_of_blacks >= 5:
+        return 0
+    else:
+        return center
+
+
+def smooth_image(original_image):
+    image_5 = ndimage.filters.generic_filter(
+        original_image, smooth_filter_5, (5, 5)
+    )
+    image_3 = ndimage.filters.generic_filter(image_5, smooth_filter_3, (3, 3))
+    return image_3
+
+
+def image_thinning(img):
+    return np.invert(skeletonize(img==np.zeros(img.shape)))
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
-    blurred_image = cv2.medianBlur(image_enhanced, 5)
+    blurred_image = signal.medfilt(image_enhanced, 5)
+
+    # plt.imshow(blurred_image, cmap='Greys_r')
+    # plt.show()
 
     orientations, averages_x, averages_y = orientation_computation(
         blurred_image
@@ -296,5 +343,12 @@ for image in rindex28.images:
 
     binarized_image = image_binarization(image_enhanced)
 
-    plt.imshow(binarized_image, cmap='Greys_r')
+    smoothed_image = smooth_image(binarized_image)
+
+    plt.imshow(smoothed_image, cmap='Greys_r')
+    plt.show()
+
+    thin_image = image_thinning(smoothed_image)
+
+    plt.imshow(thin_image, cmap='Greys_r')
     plt.show()
