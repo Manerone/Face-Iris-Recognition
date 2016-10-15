@@ -5,9 +5,10 @@ import cv2
 import copy
 from scipy import ndimage
 from scipy.spatial import distance
-from scipy import signal 
+from scipy import signal
 from skimage.morphology import skeletonize
 from rindex28_loader import Rindex28Loader
+from skimage import img_as_ubyte
 
 
 # cv2.imshow('', np.concatenate((sobelX, sobelY), axis=1))
@@ -310,7 +311,54 @@ def smooth_image(original_image):
 
 
 def image_thinning(img):
-    return np.invert(skeletonize(img==np.zeros(img.shape)))
+    return np.invert(skeletonize(img == np.zeros(img.shape)))
+
+
+def find_minutiaes(image_original, interesting_blocks):
+    image = image_original.astype(int)
+    isolated_points = []
+    endings = []
+    edgepoints = []
+    bifurcations = []
+    crossings = []
+    width, heigth = image.shape
+    for i in xrange(1, width - 1):
+        for j in xrange(1, heigth - 1):
+            block = image[i - 1:i + 2, j - 1:j + 2].reshape(1, -1).flatten()
+            center_index = len(block)/2
+            center = block[center_index]
+            if center == 0:
+                neighbors = np.delete(block, center_index)
+                n_of_blacks = len(neighbors[np.where(neighbors == 0)])
+                point = (i, j)
+                if n_of_blacks == 0:
+                    isolated_points.append(point)
+                elif n_of_blacks == 1:
+                    endings.append(point)
+                elif n_of_blacks == 2:
+                    edgepoints.append(point)
+                elif n_of_blacks == 3:
+                    bifurcations.append(point)
+                else:
+                    crossings.append(point)
+    return isolated_points, endings, edgepoints, bifurcations, crossings
+
+
+def show_minutiaes(image_original, isolated_points, endings, edgepoints, bifurcations, crossings):
+    image = img_as_ubyte(image_original)
+    # for coord in isolated_points:
+    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    # for coord in endings:
+    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    # for coord in edgepoints:
+    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    # for coord in bifurcations:
+    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    for coord in crossings:
+        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+
+    plt.imshow(image, cmap='Greys_r')
+    plt.show()
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
@@ -345,10 +393,12 @@ for image in rindex28.images:
 
     smoothed_image = smooth_image(binarized_image)
 
-    plt.imshow(smoothed_image, cmap='Greys_r')
-    plt.show()
-
     thin_image = image_thinning(smoothed_image)
 
-    plt.imshow(thin_image, cmap='Greys_r')
-    plt.show()
+    isolated_points, endings, edgepoints, bifurcations, crossings = \
+        find_minutiaes(thin_image, interesting_blocks)
+
+    show_minutiaes(
+        thin_image, isolated_points, endings,
+        edgepoints, bifurcations, crossings
+    )
