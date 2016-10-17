@@ -397,15 +397,11 @@ for image in rindex28.images:
     minutiaes = minutiaes_detection(thin_image, interesting_blocks)
 
 
-    tmp_image = copy.deepcopy(thin_image)
-    tmp_image[np.where(tmp_image == False)] = 0
-    tmp_image[np.where(tmp_image == True)] = 255
-    print tmp_image
+    tmp_image = copy.deepcopy(thin_image).astype(np.float)
+    tmp_image[tmp_image == 1] = 255
     for i in xrange(300):
         for j in xrange(300):
             if minutiaes[i][j] != 0:
-                print i,j
-                print minutiaes[i][j]
-                cv2.circle(tmp_image, (j, i), 4, (0, 0, 0), -1)
+                cv2.circle(tmp_image, (j, i), 2, (0, 0, 0), -1)
     plt.imshow(tmp_image, cmap='Greys_r')
     plt.show()
