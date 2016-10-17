@@ -277,8 +277,8 @@ def smooth_filter_5(block):
     center_index = len(block)/2
     center = block[center_index]
     neighbors = np.delete(block, center_index)
-    n_of_whites = len(np.where(neighbors == 255))
-    n_of_blacks = len(np.where(neighbors == 0))
+    n_of_whites = len(neighbors[np.where(neighbors == 255)])
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
     if n_of_whites >= 18:
         return 255
     elif n_of_blacks >= 18:
@@ -291,8 +291,8 @@ def smooth_filter_3(block):
     center_index = len(block)/2
     center = block[center_index]
     neighbors = np.delete(block, center_index)
-    n_of_whites = len(np.where(neighbors == 255))
-    n_of_blacks = len(np.where(neighbors == 0))
+    n_of_whites = len(neighbors[np.where(neighbors == 255)])
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
     if n_of_whites >= 5:
         return 255
     elif n_of_blacks >= 5:
@@ -327,7 +327,7 @@ for image in rindex28.images:
     # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
-    # show_interesting_blocks(image, interesting_blocks)
+    show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(
         averages_x, averages_y, interesting_blocks
@@ -342,6 +342,9 @@ for image in rindex28.images:
     # show_singular_points(image, cores, deltas, title=classification)
 
     binarized_image = image_binarization(image_enhanced)
+
+    plt.imshow(binarized_image, cmap='Greys_r')
+    plt.show()
 
     smoothed_image = smooth_image(binarized_image)
 
