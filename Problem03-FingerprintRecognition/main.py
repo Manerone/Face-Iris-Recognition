@@ -8,6 +8,7 @@ from scipy.spatial import distance
 from scipy import signal 
 from skimage.morphology import skeletonize
 from rindex28_loader import Rindex28Loader
+from enum import Enum
 
 
 # cv2.imshow('', np.concatenate((sobelX, sobelY), axis=1))
@@ -313,6 +314,43 @@ def image_thinning(img):
     return np.invert(skeletonize(img==np.zeros(img.shape)))
 
 
+def define_minutiaes(block, interesting_block):
+    block = block.flatten()
+    interesting_block = interesting_block.flatten()
+    center_index = len(block)/2
+    center = block[center_index]
+    neighbors = np.delete(block, center_index)
+    if center != 0:
+        return 0
+    if np.any(interesting_block == False):
+        return 0
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
+    if n_of_blacks == 0:
+        return 1
+    elif n_of_blacks == 1:
+        return 2
+    elif n_of_blacks == 2:
+        return 3
+    elif n_of_blacks == 3:
+        return 4
+    else:
+        return 5
+
+
+
+def minutiaes_detection(image, interesting_blocks):
+    width, heigth = image.shape
+    minutiaes = np.zeros((width, heigth))
+    for i in xrange(1,width - 1):
+        block_tmp = image[i - 1: i + 2]
+        interesting_block_tmp = interesting_blocks[i - 1: i + 2]
+        for j in xrange(1,heigth - 1):
+            block = block_tmp[:,j - 1: j + 2]
+            interesting_block = interesting_block_tmp[:,j - 1: j + 2]
+            minutiaes[i][j] = define_minutiaes(block, interesting_block)
+    return minutiaes
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
@@ -327,7 +365,7 @@ for image in rindex28.images:
     # show_orientation_lines(image, orientations)
 
     interesting_blocks = regions_of_interest(image_enhanced)
-    show_interesting_blocks(image, interesting_blocks)
+    # show_interesting_blocks(image, interesting_blocks)
 
     smoothed_orientations = smooth_orientations(
         averages_x, averages_y, interesting_blocks
@@ -343,15 +381,31 @@ for image in rindex28.images:
 
     binarized_image = image_binarization(image_enhanced)
 
-    plt.imshow(binarized_image, cmap='Greys_r')
-    plt.show()
+    # plt.imshow(binarized_image, cmap='Greys_r')
+    # plt.show()
 
     smoothed_image = smooth_image(binarized_image)
 
-    plt.imshow(smoothed_image, cmap='Greys_r')
-    plt.show()
+    # plt.imshow(smoothed_image, cmap='Greys_r')
+    # plt.show()
 
     thin_image = image_thinning(smoothed_image)
 
-    plt.imshow(thin_image, cmap='Greys_r')
+    # plt.imshow(thin_image, cmap='Greys_r')
+    # plt.show()
+
+    minutiaes = minutiaes_detection(thin_image, interesting_blocks)
+
+
+    tmp_image = copy.deepcopy(thin_image)
+    tmp_image[np.where(tmp_image == False)] = 0
+    tmp_image[np.where(tmp_image == True)] = 255
+    print tmp_image
+    for i in xrange(300):
+        for j in xrange(300):
+            if minutiaes[i][j] != 0:
+                print i,j
+                print minutiaes[i][j]
+                cv2.circle(tmp_image, (j, i), 4, (0, 0, 0), -1)
+    plt.imshow(tmp_image, cmap='Greys_r')
     plt.show()
