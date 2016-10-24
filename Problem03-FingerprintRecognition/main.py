@@ -20,7 +20,7 @@ ERROR_LIM = 0.16
 NOT_MINUTIAE = 0
 ISOLATED_POINT = 1
 ENDING = 2
-EDGEPOINT = 3
+EDGEPOINT = 0
 BIFURCATION = 4
 CROSSING = 5
 
@@ -390,7 +390,7 @@ def expand_interesting_blocks(interesting_blocks):
     return interesting_pixels
 
 
-def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=8):
+def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=20):
     minutiaes = copy.deepcopy(minutiaes_original)
     interesting_pixels = expand_interesting_blocks(interesting_blocks)
     width, heigth = minutiaes.shape
@@ -401,7 +401,6 @@ def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=8):
                 block = minutiaes[i - block_size:i + block_size + 1,
                                   j - block_size:j + block_size + 1]
                 block = np.array(block).flatten()
-                center = block[len(block)/2]
                 neighbors = np.delete(block, len(block)/2)
 
                 interesting_block = interesting_pixels[i - block_size:i + block_size + 1,
