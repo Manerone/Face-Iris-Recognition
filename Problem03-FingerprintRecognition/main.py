@@ -381,8 +381,18 @@ def show_minutiaes(minutiaes, thin_image):
     plt.show()
 
 
+def expand_interesting_blocks(interesting_blocks):
+    width, heigth = interesting_blocks.shape
+    interesting_pixels = np.zeros((width * 10, heigth * 10))
+    for i in xrange(width):
+        for j in xrange(heigth):
+            interesting_pixels[i * 10:(i+1) * 10, j * 10:(j+1) * 10] = interesting_blocks[i][j]
+    return interesting_pixels
+
+
 def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=8):
     minutiaes = copy.deepcopy(minutiaes_original)
+    interesting_pixels = expand_interesting_blocks(interesting_blocks)
     width, heigth = minutiaes.shape
     block_size = block_size/2
     for i in xrange(block_size, width - block_size):
@@ -393,7 +403,14 @@ def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=8):
                 block = np.array(block).flatten()
                 center = block[len(block)/2]
                 neighbors = np.delete(block, len(block)/2)
+
+                interesting_block = interesting_pixels[i - block_size:i + block_size + 1,
+                                                       j - block_size:j + block_size + 1]
+                interesting_block = np.array(interesting_block).flatten()
+                interesting_neighbors = np.delete(interesting_block, len(interesting_block)/2)
                 if np.any(neighbors != NOT_MINUTIAE):
+                    minutiaes[i][j] = NOT_MINUTIAE
+                elif np.any(interesting_neighbors == 0):
                     minutiaes[i][j] = NOT_MINUTIAE
     return minutiaes
 
