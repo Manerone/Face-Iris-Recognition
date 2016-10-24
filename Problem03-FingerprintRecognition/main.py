@@ -286,8 +286,8 @@ def smooth_filter_5(block):
     center_index = len(block)/2
     center = block[center_index]
     neighbors = np.delete(block, center_index)
-    n_of_whites = len(np.where(neighbors == 255))
-    n_of_blacks = len(np.where(neighbors == 0))
+    n_of_whites = len(neighbors[np.where(neighbors == 255)])
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
     if n_of_whites >= 18:
         return 255
     elif n_of_blacks >= 18:
@@ -300,8 +300,8 @@ def smooth_filter_3(block):
     center_index = len(block)/2
     center = block[center_index]
     neighbors = np.delete(block, center_index)
-    n_of_whites = len(np.where(neighbors == 255))
-    n_of_blacks = len(np.where(neighbors == 0))
+    n_of_whites = len(neighbors[np.where(neighbors == 255)])
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
     if n_of_whites >= 5:
         return 255
     elif n_of_blacks >= 5:
@@ -369,6 +369,43 @@ def show_minutiaes(image_original, isolated_points, endings, edgepoints, bifurca
     plt.show()
 
 
+def define_minutiaes(block, interesting_block):
+    block = block.flatten()
+    interesting_block = interesting_block.flatten()
+    center_index = len(block)/2
+    center = block[center_index]
+    neighbors = np.delete(block, center_index)
+    if center != 0:
+        return 0
+    if np.any(interesting_block == False):
+        return 0
+    n_of_blacks = len(neighbors[np.where(neighbors == 0)])
+    if n_of_blacks == 0:
+        return 1
+    elif n_of_blacks == 1:
+        return 2
+    elif n_of_blacks == 2:
+        return 3
+    elif n_of_blacks == 3:
+        return 4
+    else:
+        return 5
+
+
+
+def minutiaes_detection(image, interesting_blocks):
+    width, heigth = image.shape
+    minutiaes = np.zeros((width, heigth))
+    for i in xrange(1,width - 1):
+        block_tmp = image[i - 1: i + 2]
+        interesting_block_tmp = interesting_blocks[i - 1: i + 2]
+        for j in xrange(1,heigth - 1):
+            block = block_tmp[:,j - 1: j + 2]
+            interesting_block = interesting_block_tmp[:,j - 1: j + 2]
+            minutiaes[i][j] = define_minutiaes(block, interesting_block)
+    return minutiaes
+
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
@@ -399,14 +436,27 @@ for image in rindex28.images:
 
     binarized_image = image_binarization(image_enhanced)
 
+    # plt.imshow(binarized_image, cmap='Greys_r')
+    # plt.show()
+
     smoothed_image = smooth_image(binarized_image)
+
+    # plt.imshow(smoothed_image, cmap='Greys_r')
+    # plt.show()
 
     thin_image = image_thinning(smoothed_image)
 
-    isolated_points, endings, edgepoints, bifurcations, crossings = \
-        find_minutiaes(thin_image, interesting_blocks)
+    # plt.imshow(thin_image, cmap='Greys_r')
+    # plt.show()
 
-    show_minutiaes(
-        thin_image, isolated_points, endings,
-        edgepoints, bifurcations, crossings
-    )
+    minutiaes = minutiaes_detection(thin_image, interesting_blocks)
+
+
+    tmp_image = copy.deepcopy(thin_image).astype(np.float)
+    tmp_image[tmp_image == 1] = 255
+    for i in xrange(300):
+        for j in xrange(300):
+            if minutiaes[i][j] != 0:
+                cv2.circle(tmp_image, (j, i), 2, (0, 0, 0), -1)
+    plt.imshow(tmp_image, cmap='Greys_r')
+    plt.show()
