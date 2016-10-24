@@ -322,53 +322,6 @@ def image_thinning(img):
     return np.invert(skeletonize(img == np.zeros(img.shape)))
 
 
-def find_minutiaes(image_original, interesting_blocks):
-    image = image_original.astype(int)
-    isolated_points = []
-    endings = []
-    edgepoints = []
-    bifurcations = []
-    crossings = []
-    width, heigth = image.shape
-    for i in xrange(1, width - 1):
-        for j in xrange(1, heigth - 1):
-            block = image[i - 1:i + 2, j - 1:j + 2].reshape(1, -1).flatten()
-            center_index = len(block)/2
-            center = block[center_index]
-            if center == 0:
-                neighbors = np.delete(block, center_index)
-                n_of_blacks = len(neighbors[np.where(neighbors == 0)])
-                point = (i, j)
-                if n_of_blacks == 0:
-                    isolated_points.append(point)
-                elif n_of_blacks == 1:
-                    endings.append(point)
-                elif n_of_blacks == 2:
-                    edgepoints.append(point)
-                elif n_of_blacks == 3:
-                    bifurcations.append(point)
-                else:
-                    crossings.append(point)
-    return isolated_points, endings, edgepoints, bifurcations, crossings
-
-
-def show_minutiaes(image_original, isolated_points, endings, edgepoints, bifurcations, crossings):
-    image = img_as_ubyte(image_original)
-    for coord in isolated_points:
-        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    for coord in endings:
-        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    # for coord in edgepoints:
-    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    for coord in bifurcations:
-        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    for coord in crossings:
-        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-
-    plt.imshow(image, cmap='Greys_r')
-    plt.show()
-
-
 def define_minutiaes(block, interesting_block):
     block = block.flatten()
     interesting_block = interesting_block.flatten()
@@ -392,16 +345,15 @@ def define_minutiaes(block, interesting_block):
         return 5
 
 
-
 def minutiaes_detection(image, interesting_blocks):
     width, heigth = image.shape
     minutiaes = np.zeros((width, heigth))
-    for i in xrange(1,width - 1):
+    for i in xrange(1, width - 1):
         block_tmp = image[i - 1: i + 2]
         interesting_block_tmp = interesting_blocks[i - 1: i + 2]
-        for j in xrange(1,heigth - 1):
-            block = block_tmp[:,j - 1: j + 2]
-            interesting_block = interesting_block_tmp[:,j - 1: j + 2]
+        for j in xrange(1, heigth - 1):
+            block = block_tmp[:, j - 1: j + 2]
+            interesting_block = interesting_block_tmp[:, j - 1: j + 2]
             minutiaes[i][j] = define_minutiaes(block, interesting_block)
     return minutiaes
 
