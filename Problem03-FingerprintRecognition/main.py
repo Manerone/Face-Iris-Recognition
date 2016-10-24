@@ -17,6 +17,13 @@ from skimage import img_as_ubyte
 
 ERROR_LIM = 0.16
 
+NOT_MINUTIAE = 0
+ISOLATED_POINT = 1
+ENDING = 2
+EDGEPOINT = 3
+BIFURCATION = 4
+CROSSING = 5
+
 
 def image_enhancement(image):
     mean = np.mean(image)
@@ -322,27 +329,31 @@ def image_thinning(img):
     return np.invert(skeletonize(img == np.zeros(img.shape)))
 
 
+def is_ridge(value):
+    return value == 0
+
+
 def define_minutiaes(block, interesting_block):
     block = block.flatten()
     interesting_block = interesting_block.flatten()
     center_index = len(block)/2
     center = block[center_index]
     neighbors = np.delete(block, center_index)
-    if center != 0:
-        return 0
+    if not is_ridge(center):
+        return NOT_MINUTIAE
     if np.any(interesting_block == False):
-        return 0
+        return NOT_MINUTIAE
     n_of_blacks = len(neighbors[np.where(neighbors == 0)])
     if n_of_blacks == 0:
-        return 1
+        return ISOLATED_POINT
     elif n_of_blacks == 1:
-        return 2
+        return ENDING
     elif n_of_blacks == 2:
-        return 3
+        return EDGEPOINT
     elif n_of_blacks == 3:
-        return 4
+        return BIFURCATION
     else:
-        return 5
+        return CROSSING
 
 
 def minutiaes_detection(image, interesting_blocks):
@@ -356,6 +367,18 @@ def minutiaes_detection(image, interesting_blocks):
             interesting_block = interesting_block_tmp[:, j - 1: j + 2]
             minutiaes[i][j] = define_minutiaes(block, interesting_block)
     return minutiaes
+
+
+def show_minutiaes(minutiaes, thin_image):
+    tmp_image = copy.deepcopy(thin_image).astype(np.float)
+    tmp_image[tmp_image == 1] = 255
+    width, heigth = minutiaes.shape
+    for i in xrange(width):
+        for j in xrange(heigth):
+            if minutiaes[i][j] != 0:
+                cv2.circle(tmp_image, (j, i), 2, (0, 0, 0), -1)
+    plt.imshow(tmp_image, cmap='Greys_r')
+    plt.show()
 
 
 rindex28 = Rindex28Loader('./databases/rindex28')
@@ -402,13 +425,5 @@ for image in rindex28.images:
     # plt.show()
 
     minutiaes = minutiaes_detection(thin_image, interesting_blocks)
-
-
-    tmp_image = copy.deepcopy(thin_image).astype(np.float)
-    tmp_image[tmp_image == 1] = 255
-    for i in xrange(300):
-        for j in xrange(300):
-            if minutiaes[i][j] != 0:
-                cv2.circle(tmp_image, (j, i), 2, (0, 0, 0), -1)
-    plt.imshow(tmp_image, cmap='Greys_r')
-    plt.show()
+    
+    show_minutiaes(minutiaes, thin_image)
