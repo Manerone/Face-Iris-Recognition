@@ -381,6 +381,22 @@ def show_minutiaes(minutiaes, thin_image):
     plt.show()
 
 
+def minutiaes_filter(minutiaes_original, interesting_blocks, block_size=8):
+    minutiaes = copy.deepcopy(minutiaes_original)
+    width, heigth = minutiaes.shape
+    block_size = block_size/2
+    for i in xrange(block_size, width - block_size):
+        for j in xrange(block_size, heigth - block_size):
+            if minutiaes[i][j] != NOT_MINUTIAE:
+                block = minutiaes[i - block_size:i + block_size + 1,
+                                  j - block_size:j + block_size + 1]
+                block = np.array(block).flatten()
+                center = block[len(block)/2]
+                neighbors = np.delete(block, len(block)/2)
+                if np.any(neighbors != NOT_MINUTIAE):
+                    minutiaes[i][j] = NOT_MINUTIAE
+    return minutiaes
+
 rindex28 = Rindex28Loader('./databases/rindex28')
 for image in rindex28.images:
     image_enhanced = image_enhancement(image)
@@ -425,5 +441,9 @@ for image in rindex28.images:
     # plt.show()
 
     minutiaes = minutiaes_detection(thin_image, interesting_blocks)
-    
-    show_minutiaes(minutiaes, thin_image)
+
+    filtered_minutiaes = minutiaes_filter(minutiaes, interesting_blocks)
+
+    # show_minutiaes(minutiaes, thin_image)
+
+    show_minutiaes(filtered_minutiaes, thin_image)
