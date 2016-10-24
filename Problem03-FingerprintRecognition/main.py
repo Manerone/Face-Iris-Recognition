@@ -253,25 +253,33 @@ def find_percent_in_hist(hist, value):
 
 def image_binarization(image_original):
     img = copy.deepcopy(image_original)
-    histogram, bins = np.histogram(img.ravel(), 256, [0, 256])
+    width, heigth = img.shape
+    histogram = cv2.calcHist([img.astype(np.float32)], [0], None, [256], [0, 256])
     p25 = find_percent_in_hist(histogram, 0.25)
     p50 = find_percent_in_hist(histogram, 0.5)
 
-    def binarize(block):
-        center = block[(len(block)/2) + 1]
-        block_mean = np.mean(block)
-        if center < p25:
-            return 0
-        elif center > p50:
-            return 255
-        else:
-            sum = (np.sum(block) - center)/8.0
-            if sum >= block_mean:
-                return 255
+    mean_blocks = []
+    for i in xrange(0, width, 10):
+        for j in xrange(0, heigth, 10):
+            mean_blocks.append(
+                np.mean(image_original[i:i + 10, j:j + 10])
+            )
+    mean_blocks = np.array(mean_blocks).reshape(width/10, heigth/10)
+
+    for i in xrange(width):
+        for j in xrange(heigth):
+            if image_original[i][j] < p25:
+                img[i][j] = 0
+            elif image_original[i][j] > p50:
+                img[i][j] = 255
             else:
-                return 0
-    image = ndimage.filters.generic_filter(img, binarize, (3, 3))
-    return np.array(image)
+                block = image_original[i - 1:i + 2, j - 1:j + 2]
+                sum_neighbors = (np.mean(block) - image_original[i][j])/8
+                if sum_neighbors >= mean_blocks[i/10][j/10]:
+                    img[i][j] = 255
+                else:
+                    img[i][j] = 0
+    return np.array(img)
 
 
 def smooth_filter_5(block):
@@ -346,14 +354,14 @@ def find_minutiaes(image_original, interesting_blocks):
 
 def show_minutiaes(image_original, isolated_points, endings, edgepoints, bifurcations, crossings):
     image = img_as_ubyte(image_original)
-    # for coord in isolated_points:
-    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    # for coord in endings:
-    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    for coord in isolated_points:
+        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    for coord in endings:
+        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
     # for coord in edgepoints:
     #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
-    # for coord in bifurcations:
-    #     cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
+    for coord in bifurcations:
+        cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
     for coord in crossings:
         cv2.circle(image, reverse_tuple(coord), 1, (0, 0, 0), -1)
 
