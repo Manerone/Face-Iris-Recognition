@@ -30,7 +30,6 @@ class ProcessedImage:
         self.minutiaes = self._minutiaes(image)
         self.label = label
         self.image_with_points = self._construct_total_image()
-        print self.image_with_points
 
     def _classify(self, image):
         self.image_enhanced = self._image_enhancement(image)
@@ -91,7 +90,17 @@ class ProcessedImage:
             img[core] = CORE
         for delta in self.deltas:
             img[delta] = DELTA
-        return img
+        point = self._find_center()
+        angle = self.smoothed_orientations[point]
+        return rotateImage(img, angle, point)
+
+    def rotateImage(image, angle, point):
+        rot_mat = cv2.getRotationMatrix2D(point, angle, 1.0)
+        result = cv2.warpAffine(image, rot_mat, image.shape, flags=cv2.INTER_LINEAR)
+        return result
+
+    def _find_center(self):
+        return tuple(np.array(self.image.shape)/2)
 
     def _image_enhancement(self, image):
         mean = np.mean(image)
