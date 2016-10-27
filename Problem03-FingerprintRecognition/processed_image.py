@@ -92,9 +92,9 @@ class ProcessedImage:
             img[delta] = DELTA
         point = self._find_center()
         angle = self.smoothed_orientations[point]
-        return rotateImage(img, angle, point)
+        return self._rotateImage(img, angle, point)
 
-    def rotateImage(image, angle, point):
+    def _rotateImage(image, angle, point):
         rot_mat = cv2.getRotationMatrix2D(point, angle, 1.0)
         result = cv2.warpAffine(image, rot_mat, image.shape, flags=cv2.INTER_LINEAR)
         return result
