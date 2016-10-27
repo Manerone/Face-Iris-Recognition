@@ -82,7 +82,7 @@ class FingerprintRecognizer:
 
         filtered_minutiaes = self._minutiaes_filter(minutiaes, interesting_blocks)
 
-        # self._show_minutiaes(filtered_minutiaes, thin_image)
+        self._show_minutiaes(filtered_minutiaes, thin_image)
         return filtered_minutiaes
 
     def _image_enhancement(self, image):
@@ -359,15 +359,16 @@ class FingerprintRecognizer:
         return interesting_pixels
 
     def _minutiaes_filter(self, minutiaes_original, interesting_blocks, block_size=20):
-        minutiaes = copy.deepcopy(minutiaes_original)
+        minutiaes_matrix = copy.deepcopy(minutiaes_original)
         interesting_pixels = self._expand_interesting_blocks(interesting_blocks)
-        width, heigth = minutiaes.shape
+        width, heigth = minutiaes_matrix.shape
         block_size = block_size/2
+        minutiaes = {key: [] for key in [ISOLATED_POINT, ENDING, BIFURCATION, CROSSING]}
         for i in xrange(block_size, width - block_size):
             for j in xrange(block_size, heigth - block_size):
-                if minutiaes[i][j] != NOT_MINUTIAE:
-                    block = minutiaes[i - block_size:i + block_size + 1,
-                                      j - block_size:j + block_size + 1]
+                if minutiaes_matrix[i][j] != NOT_MINUTIAE:
+                    block = minutiaes_matrix[i - block_size:i + block_size + 1,
+                                             j - block_size:j + block_size + 1]
                     block = np.array(block).flatten()
                     neighbors = np.delete(block, len(block)/2)
 
@@ -376,9 +377,11 @@ class FingerprintRecognizer:
                     interesting_block = np.array(interesting_block).flatten()
                     interesting_neighbors = np.delete(interesting_block, len(interesting_block)/2)
                     if np.any(neighbors != NOT_MINUTIAE):
-                        minutiaes[i][j] = NOT_MINUTIAE
+                        minutiaes_matrix[i][j] = NOT_MINUTIAE
                     elif np.any(interesting_neighbors == 0):
-                        minutiaes[i][j] = NOT_MINUTIAE
+                        minutiaes_matrix[i][j] = NOT_MINUTIAE
+                    else:
+                        minutiaes[minutiaes_matrix[i][j]].append((i, j))
         return minutiaes
 
     def _show_orientation_lines(self, image_org, orientations):
@@ -405,7 +408,6 @@ class FingerprintRecognizer:
         plt.imshow(image, cmap='Greys_r')
         plt.show()
 
-
     def _show_interesting_blocks(self, image_original, interesting_blocks):
         image = copy.deepcopy(image_original)
         lin_block = 0
@@ -431,17 +433,14 @@ class FingerprintRecognizer:
         plt.title(title)
         plt.show()
 
-
     def _reverse_tuple(self, tuple):
         return tuple[::-1]
 
     def _show_minutiaes(self, minutiaes, thin_image):
         tmp_image = copy.deepcopy(thin_image).astype(np.float)
         tmp_image[tmp_image == 1] = 255
-        width, heigth = minutiaes.shape
-        for i in xrange(width):
-            for j in xrange(heigth):
-                if minutiaes[i][j] != 0:
-                    cv2.circle(tmp_image, (j, i), 2, (0, 0, 0), -1)
+        for key, value in minutiaes.items():
+            for point in value:
+                cv2.circle(tmp_image, self._reverse_tuple(point), 2, (0, 0, 0), -1)
         plt.imshow(tmp_image, cmap='Greys_r')
         plt.show()
