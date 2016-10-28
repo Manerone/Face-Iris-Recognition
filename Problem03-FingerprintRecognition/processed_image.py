@@ -29,7 +29,6 @@ class ProcessedImage:
         self.classification = self._classify(image)
         self.minutiaes = self._minutiaes(image)
         self.label = label
-        self.image_with_points = self._construct_total_image()
 
     def _classify(self, image):
         self.image_enhanced = self._image_enhancement(image)
@@ -44,7 +43,7 @@ class ProcessedImage:
         # self._show_orientation_lines(image, orientations)
 
         self.interesting_blocks = self._regions_of_interest(self.image_enhanced)
-        # self._show_interesting_blocks(image, interesting_blocks)
+        self._show_interesting_blocks(image, self.interesting_blocks)
 
         self.smoothed_orientations = self._smooth_orientations(
             self.averages_x, self.averages_y, self.interesting_blocks
@@ -60,47 +59,49 @@ class ProcessedImage:
     def _minutiaes(self, image):
         self.binarized_image = self._image_binarization(self.image_enhanced)
 
-        # plt.imshow(binarized_image, cmap='Greys_r')
+        heigth, width = self.binarized_image.shape
+        for i in xrange(heigth):
+            for j in xrange(width):
+                if self.interesting_blocks[i/10][j/10] == False:
+                    self.binarized_image[i][j] = 255
+
+        # plt.imshow(self.binarized_image, cmap='Greys_r')
         # plt.show()
 
         self.smoothed_image = self._smooth_image(self.binarized_image)
 
-        # plt.imshow(smoothed_image, cmap='Greys_r')
+        # plt.imshow(self.smoothed_image, cmap='Greys_r')
         # plt.show()
 
         self.thin_image = self._image_thinning(self.smoothed_image)
 
-        # plt.imshow(thin_image, cmap='Greys_r')
+        # plt.imshow(self.thin_image, cmap='Greys_r')
         # plt.show()
 
-        self.interesting_blocks = self._regions_of_interest(self.image_enhanced)
         self.minutiaes = self._minutiaes_detection(self.thin_image, self.interesting_blocks)
 
         self.filtered_minutiaes = self._minutiaes_filter(self.minutiaes, self.interesting_blocks)
 
-        self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
+        # self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
+        # ROTATE AND TRANSLATE MINUTIAES ACCORDING TO REGISTRATION POINT
         return self.filtered_minutiaes
 
-    def _construct_total_image(self):
-        img = np.zeros(self.image.shape)
-        for key, values in self.minutiaes.items():
-            for point in values:
-                img[point] = key
-        for core in self.cores:
-            img[core] = CORE
-        for delta in self.deltas:
-            img[delta] = DELTA
-        point = self._find_center()
-        angle = self.smoothed_orientations[point]
-        return self._rotateImage(img, angle, point)
-
-    def _rotateImage(image, angle, point):
-        rot_mat = cv2.getRotationMatrix2D(point, angle, 1.0)
-        result = cv2.warpAffine(image, rot_mat, image.shape, flags=cv2.INTER_LINEAR)
-        return result
-
-    def _find_center(self):
-        return tuple(np.array(self.image.shape)/2)
+    def _find_registration_point(self):
+        classification = self.classification
+        if classification == 'left loop' or classification == 'right loop':
+            point = self.cores[0]
+        elif classification == 'whorl':
+            point = self.cores[0]
+        elif classification == 'arch':
+            if len(self.cores) > 0:
+                point = self.cores[0]
+            elif len(self.deltas > 0):
+                point = self.deltas[0]
+            else:
+                point = tuple(np.array(self.image.shape)/2)
+        else:
+            point = tuple(np.array(self.image.shape)/2)
+        return point
 
     def _image_enhancement(self, image):
         mean = np.mean(image)
@@ -145,7 +146,7 @@ class ProcessedImage:
                 mean = np.mean(block)/float(255)
                 standard_deviation = np.std(block)/float(255)
                 v = 0.5 * (1-mean) + 0.5 * standard_deviation + distance_ratio
-                if v > 0.35:
+                if v > 0.28:
                     interesting_blocks[i][j] = True
         return interesting_blocks
 
