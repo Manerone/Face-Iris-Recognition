@@ -26,8 +26,8 @@ class ProcessedImage:
     def __init__(self, image, label):
         self.error_limit = 0.16
         self.image = copy.deepcopy(image)
-        self.classification = self._classify(image)
-        self.minutiaes = self._minutiaes(image)
+        self._classify(image)
+        self._minutiaes(image)
         self.label = label
 
     def _classify(self, image):
@@ -43,7 +43,7 @@ class ProcessedImage:
         # self._show_orientation_lines(image, orientations)
 
         self.interesting_blocks = self._regions_of_interest(self.image_enhanced)
-        self._show_interesting_blocks(image, self.interesting_blocks)
+        # self._show_interesting_blocks(image, self.interesting_blocks)
 
         self.smoothed_orientations = self._smooth_orientations(
             self.averages_x, self.averages_y, self.interesting_blocks
@@ -54,7 +54,6 @@ class ProcessedImage:
             self.smoothed_orientations, self.interesting_blocks
         )
         self.classification = self._classify_based_on(self.cores, self.deltas, self.interesting_blocks)
-        return self.classification
 
     def _minutiaes(self, image):
         self.binarized_image = self._image_binarization(self.image_enhanced)
@@ -82,9 +81,48 @@ class ProcessedImage:
 
         self.filtered_minutiaes = self._minutiaes_filter(self.minutiaes, self.interesting_blocks)
 
-        # self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
-        # ROTATE AND TRANSLATE MINUTIAES ACCORDING TO REGISTRATION POINT
-        return self.filtered_minutiaes
+        self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
+
+        self.registration_point = self._find_registration_point()
+
+        self.transformed_minutiaes = self._translate_and_rotate_minutiaes(
+            self.registration_point, self.filtered_minutiaes
+        )
+
+        tmp_image = copy.deepcopy(self.thin_image).astype(np.float)
+        tmp_image[tmp_image == 1] = 255
+        for key, value in self.transformed_minutiaes.items():
+            for point in value:
+                p = self._reverse_tuple(point)
+                p = tuple(np.array(p) + np.array(self.registration_point))
+                cv2.circle(tmp_image, p, 2, (0, 0, 0), -1)
+        plt.imshow(tmp_image, cmap='Greys_r')
+        plt.show()
+
+    def _translate_and_rotate_minutiaes(self, center, minutiaes_org):
+        minutiaes = {key: [] for key in [ISOLATED_POINT, ENDING, BIFURCATION, CROSSING]}
+        angle = self.smoothed_orientations[tuple(np.array(center)/10)]
+        for key, values in minutiaes_org.items():
+            for minutiae in values:
+                minutiaes[key].append(
+                    self._translate_and_rotate_minutiae(
+                        center, self._reverse_tuple(minutiae), angle
+                    )
+                )
+        return minutiaes
+
+    def _translate_and_rotate_minutiae(self, center, minutiae, angle):
+        cos = np.cos(angle)
+        sin = np.sin(angle)
+        c_x, c_y = center
+        m_x, m_y = minutiae
+        # translate
+        x = -c_x + m_x
+        y = -c_y + m_y
+        # rotate
+        new_x = x * cos - y * sin
+        new_y = y * cos + x * sin
+        return int(new_x), int(new_y)
 
     def _find_registration_point(self):
         classification = self.classification
