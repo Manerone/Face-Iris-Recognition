@@ -81,7 +81,7 @@ class ProcessedImage:
 
         self.filtered_minutiaes = self._minutiaes_filter(self.minutiaes, self.interesting_blocks)
 
-        self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
+        # self._show_minutiaes(self.filtered_minutiaes, self.thin_image)
 
         self.registration_point = self._find_registration_point()
 
@@ -99,7 +99,10 @@ class ProcessedImage:
                         center, self._reverse_tuple(minutiae), angle
                     )
                 )
-        return minutiaes
+        array_of_minutiaes = []
+        for _, values in minutiaes.items():
+            array_of_minutiaes = array_of_minutiaes + values
+        return np.array(array_of_minutiaes)
 
     def _translate_and_rotate_minutiae(self, center, minutiae, angle):
         cos = np.cos(angle)
