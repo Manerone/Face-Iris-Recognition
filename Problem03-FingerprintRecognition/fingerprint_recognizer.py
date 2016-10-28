@@ -1,4 +1,5 @@
 from processed_image import ProcessedImage
+from scipy.spatial import distance
 
 
 class FingerprintRecognizer:
@@ -20,3 +21,17 @@ class FingerprintRecognizer:
                 min_s = s
         label = self.trainingSet[min_s_index].label
         return label
+
+    def calculate_s(self, train, test, radius=16):
+        potencial_minutiaes = []
+        train_minutiaes = train.transformed_minutiaes
+        test_minutiaes = test.transformed_minutiaes
+        for train_minutiae in train_minutiaes:
+            for test_minutiae in test_minutiaes:
+                dist = distance.cdist(train_minutiae, test_minutiae, metric='euclidean')
+                if dist <= radius:
+                    potencial_minutiaes.append(distance)
+        np.array(potencial_minutiaes)
+        summatory = 1 - potencial_minutiaes / radius
+        s = 100/len(potencial_minutiaes) * summatory
+        return s

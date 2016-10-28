@@ -89,16 +89,6 @@ class ProcessedImage:
             self.registration_point, self.filtered_minutiaes
         )
 
-        tmp_image = copy.deepcopy(self.thin_image).astype(np.float)
-        tmp_image[tmp_image == 1] = 255
-        for key, value in self.transformed_minutiaes.items():
-            for point in value:
-                p = self._reverse_tuple(point)
-                p = tuple(np.array(p) + np.array(self.registration_point))
-                cv2.circle(tmp_image, p, 2, (0, 0, 0), -1)
-        plt.imshow(tmp_image, cmap='Greys_r')
-        plt.show()
-
     def _translate_and_rotate_minutiaes(self, center, minutiaes_org):
         minutiaes = {key: [] for key in [ISOLATED_POINT, ENDING, BIFURCATION, CROSSING]}
         angle = self.smoothed_orientations[tuple(np.array(center)/10)]
