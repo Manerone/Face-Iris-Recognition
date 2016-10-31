@@ -19,7 +19,7 @@ class MITLoader:
     def get_images(self, path):
         self.images = []
         for image_path in self.get_files_from(path):
-            image_pil = Image.open(image_path).convert('L')
+            image_pil = Image.open(image_path)
             image_np = np.array(image_pil, 'uint8')
             self.images.append(image_np)
 
