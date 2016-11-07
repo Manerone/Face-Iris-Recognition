@@ -1,13 +1,13 @@
 from hog import HOG
 from pyramid import Pyramid
-from windowize import Windowize
+from windownize import Windownize
 # import matplotlib.pyplot as plt
 
 class PedestrianDetector:
 	"""docstring for PedestrianDetector"""
 	def __init__(self, images):
 		self.images = images
-		self.conigurations = {
+		self.configurations = {
 			'minPyramidSize': (128, 64),
 			'windowSize': (128, 64),
 			'windowDisplacement': 8
@@ -18,6 +18,7 @@ class PedestrianDetector:
 		for image in self.images:
 			for img in self._pyramidize(image):
 				for window in self._windownize(img):
+					pass
 
 	def _pyramidize(self, image):
 		return Pyramid.call(
