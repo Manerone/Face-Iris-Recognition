@@ -1,4 +1,5 @@
 from adjust_gamma import AdjustGamma
+from pyramid import Pyramid
 import matplotlib.pyplot as plt
 
 class PedestrianDetector:
@@ -11,10 +12,8 @@ class PedestrianDetector:
 
 	def train(self):
 		for image in self.images:
-			plt.imshow(image)
-			plt.show()
-
 			gamma_corrected = AdjustGamma.call(image, self.configurations['gamma'])
-			plt.imshow(gamma_corrected)
-			plt.show()
+			for img in Pyramid.call(image):
+				print img.shape
+				raw_input("Wait")
 		
