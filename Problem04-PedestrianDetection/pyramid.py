@@ -1,14 +1,23 @@
-from skimage.transform import pyramid_gaussian
+import imutils
 
 
 class Pyramid:
     """docstring for Pyramid"""
     @staticmethod
-    def call(image, downscale=2, minSize=(128, 64)):
-        for (i, resized) in enumerate(pyramid_gaussian(image, downscale=downscale)):
-            # if the image is too small, break from the loop
-            heigth, width, channels = resized.shape
-            if heigth < minSize[0] or width < minSize[1]:
+    def call(image, scale=2, minSize=(128, 64)):
+        # yield the original image
+        yield image
+
+        # keep looping over the pyramid
+        while True:
+            # compute the new dimensions of the image and resize it
+            w = int(image.shape[1] / scale)
+            image = imutils.resize(image, width=w)
+
+            # if the resized image does not meet the supplied minimum
+            # size, then stop constructing the pyramid
+            if image.shape[0] < minSize[1] or image.shape[1] < minSize[0]:
                 break
-            # show the resized image
-            yield resized
+
+            # yield the next image in the pyramid
+            yield image
