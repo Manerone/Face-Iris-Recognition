@@ -1,33 +1,40 @@
 from hog import HOG
 from pyramid import Pyramid
 from windownize import Windownize
-# import matplotlib.pyplot as plt
+from gradient import Gradient
+import matplotlib.pyplot as plt
+
 
 class PedestrianDetector:
-	"""docstring for PedestrianDetector"""
-	def __init__(self, images):
-		self.images = images
-		self.configurations = {
-			'minPyramidSize': (128, 64),
-			'windowSize': (128, 64),
-			'windowDisplacement': 8
-		}
+    """docstring for PedestrianDetector"""
+    def __init__(self, images):
+        self.images = images
+        self.configurations = {
+            'minPyramidSize': (128, 64),
+            'windowSize': (128, 64),
+            'windowDisplacement': 8
+        }
 
-	def train(self):
-		hog = HOG()
-		for image in self.images:
-			for img in self._pyramidize(image):
-				for window in self._windownize(img):
-					pass
+    def train(self):
+        hog = HOG()
+        for image in self.images:
+            for img in self._pyramidize(image):
+                img_ori, img_mag = self._gradient(img)
+                for window in self._windownize(img):
+                    plt.imshow(window)
+                    plt.show()
 
-	def _pyramidize(self, image):
-		return Pyramid.call(
-			image, minSize=self.configurations['minPyramidSize']
-		)
+    def _pyramidize(self, image):
+        return Pyramid.call(
+            image, minSize=self.configurations['minPyramidSize']
+        )
 
-	def _windownize(self, image):
-		return Windownize.call(
-			image,
-			self.configurations['windowSize'],
-			self.configurations['windowDisplacement']
-		)
+    def _windownize(self, image):
+        return Windownize.call(
+            image,
+            self.configurations['windowSize'],
+            self.configurations['windowDisplacement']
+        )
+
+    def _gradient(self, image):
+        return Gradient().call(image)
