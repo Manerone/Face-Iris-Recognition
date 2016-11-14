@@ -46,9 +46,9 @@ class Gradient:
                             grad_y[channel][i][j]
                         )
                     )
-                    m = max(mag)
-                    magnitudes[i][j] = m
-                    orientations[i][j] = ori[mag.index(m)]
+                m = max(mag)
+                magnitudes[i][j] = m
+                orientations[i][j] = ori[mag.index(m)]
         return orientations, magnitudes
 
     def _split(self, image):
