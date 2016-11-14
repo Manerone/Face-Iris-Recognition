@@ -1,39 +1,32 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import math
+from scipy import signal
 
 
 class Gradient:
 
     def call(self, image):
-        hor_grad = self._horizontal_gradient(image)
-        ver_grad = self._vertical_gradient(image)
-        return self._orientation_and_magnitude(hor_grad, ver_grad)
+        grad_x = self._gradient_x(image)
+        grad_y = self._gradient_y(image)
+        return self._orientation_and_magnitude(grad_x, grad_y)
 
-    def _horizontal_gradient(self, image):
-        heigth, width, channels = image.shape
-        splitted_channels = self._split(image)
-        grad = np.array([np.zeros((heigth, width)) for i in xrange(channels)])
-        for channel in xrange(channels):
-            tmp = splitted_channels[channel]
-            for i in xrange(heigth):
-                for j in xrange(1, width - 1):
-                    grad[channel][i][j] = tmp[i][j-1] - tmp[i][j+1]
-        return grad
+    def _gradient_x(self, image):
+        grad = []
+        filt = np.array([[-1, 0, 1]])
+        for channel in self._split(image):
+            grad.append(signal.convolve2d(channel, filt, mode='same'))
+        return np.array(grad)
 
-    def _vertical_gradient(self, image):
-        heigth, width, channels = image.shape
-        splitted_channels = self._split(image)
-        grad = np.array([np.zeros((heigth, width)) for i in xrange(channels)])
-        for channel in xrange(channels):
-            tmp = splitted_channels[channel]
-            for i in xrange(1, heigth - 1):
-                for j in xrange(width):
-                    grad[channel][i][j] = tmp[i-1][j] - tmp[i+1][j]
-        return grad
+    def _gradient_y(self, image):
+        grad = []
+        filt = np.array([[-1], [0], [1]])
+        for channel in self._split(image):
+            grad.append(signal.convolve2d(channel, filt, mode='same'))
+        return np.array(grad)
 
-    def _orientation_and_magnitude(self, horizontal, vertical):
-        channels, heigth, width = horizontal.shape
+    def _orientation_and_magnitude(self, grad_x, grad_y):
+        channels, heigth, width = grad_x.shape
         orientations = np.zeros((heigth, width))
         magnitudes = np.zeros((heigth, width))
         for i in xrange(heigth):
@@ -43,14 +36,14 @@ class Gradient:
                 for channel in xrange(channels):
                     mag.append(
                         self._magnitude(
-                            horizontal[channel][i][j],
-                            vertical[channel][i][j]
+                            grad_x[channel][i][j],
+                            grad_y[channel][i][j]
                         )
                     )
                     ori.append(
                         self._orientation(
-                            horizontal[channel][i][j],
-                            vertical[channel][i][j]
+                            grad_x[channel][i][j],
+                            grad_y[channel][i][j]
                         )
                     )
                     m = max(mag)
