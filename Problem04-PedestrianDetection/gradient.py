@@ -49,7 +49,7 @@ class Gradient:
                 m = max(mag)
                 magnitudes[i][j] = m
                 orientations[i][j] = ori[mag.index(m)]
-        return orientations, magnitudes
+        return np.absolute(orientations), magnitudes
 
     def _split(self, image):
         red = image[:, :, 2]
