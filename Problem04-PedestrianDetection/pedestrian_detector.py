@@ -2,6 +2,8 @@ from hog import HOG
 from pyramid import Pyramid
 from windownize import Windownize
 from gradient import Gradient
+
+# Extras
 import numpy as np
 import cv2
 import math
@@ -9,25 +11,28 @@ import matplotlib.pyplot as plt
 
 
 class PedestrianDetector:
-    """docstring for PedestrianDetector"""
+    """Implementation of a pedestrian detector engine"""
     def __init__(self, images):
         self.images = images
         self.configurations = {
             'minPyramidSize': (128, 64),
             'windowSize': (128, 64),
-            'windowDisplacement': 8
+            'windowDisplacement': 8,
+            'blockSize': (16, 16),
+            'blockDisplacement': 8
         }
 
     def train(self):
-        hog = HOG()
         for image in self.images:
             for img in self._pyramidize(image):
                 img_ori, img_mag = self._gradient(img)
                 a = self._windownize(img_ori)
                 b = self._windownize(img_mag)
+                histogram = []
                 for window_ori, window_mag in zip(a, b):
-                    # self._show(window_ori, window_mag)
-                    pass
+                    histogram.append(
+                        HOG().calculate(window_ori, window_mag)
+                    )
 
     def _pyramidize(self, image):
         return Pyramid.call(
