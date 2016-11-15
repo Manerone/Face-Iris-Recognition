@@ -2,19 +2,21 @@ from blocknizer import Blocknizer
 from matrix_four_split import MatrixFourSplit
 import math
 
+
 class HOG:
     def __init__(self):
         self.configurations = {
             'blockSize': (16, 16),
             'blockDisplacement': 8
         }
+        self._buckets = None
 
     def calculate(self, orientations, magnitudes):
         hog = []
         blocks = self._blocknize_both(orientations, magnitudes)
         for block_ori, block_mag in blocks:
             for cell_ori, cell_mag in self._get_cells(block_ori, block_mag):
-                hog.append(self._trilinear_interpolation(cell_ori, cell_mag))
+                hog += self._trilinear_interpolation(cell_ori, cell_mag)
         return hog
 
     def _blocknize_both(self, m1, m2):
@@ -32,7 +34,7 @@ class HOG:
     def _get_cells(self, orientations, magnitudes):
         cells_ori = self._split_matrix_in_four(orientations)
         cells_mag = self._split_matrix_in_four(magnitudes)
-        return cells_ori, cells_mag
+        return zip(cells_ori, cells_mag)
 
     def _split_matrix_in_four(self, matrix):
         return MatrixFourSplit.split(matrix)
@@ -61,6 +63,7 @@ class HOG:
     def _find_values(self, angle_rad, magnitude):
         angle = math.degrees(angle_rad)
         buckets = self._create_buckets()
+        values = {}
         if angle >= 170:
             values[170] = magnitude
         elif angle <= 10:
