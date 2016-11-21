@@ -1,5 +1,6 @@
 from blocknizer import Blocknizer
 from matrix_four_split import MatrixFourSplit
+import numpy as np
 import math
 
 
@@ -17,7 +18,11 @@ class HOG:
         for block_ori, block_mag in blocks:
             for cell_ori, cell_mag in self._get_cells(block_ori, block_mag):
                 hog += self._trilinear_interpolation(cell_ori, cell_mag)
-        return hog
+        return self._normalize(hog)
+
+    def _normalize(self, original_vector):
+        vector = np.array(original_vector)
+        return vector/np.sum(vector)
 
     def _blocknize_both(self, m1, m2):
         blocks_m1 = self._blocknize(m1)
