@@ -13,9 +13,9 @@ import time
 
 class PedestrianDetector:
     """Implementation of a pedestrian detector engine"""
-    def __init__(self, images, labels):
+    def __init__(self, images):
         self.images = images
-        self.labels = labels
+        # self.labels = labels
         self.configurations = {
             'minPyramidSize': (128, 64),
             'windowSize': (128, 64),
@@ -29,7 +29,7 @@ class PedestrianDetector:
         for img in self.images:
             img_ori, img_mag = self._gradient(img)
             start = time.clock()
-            hogs.append(HOG().calculate(img_ori, img_mag))
+            self.hogs.append(HOG().calculate(img_ori, img_mag))
             print "Tempo:", (time.clock() - start)
             # raw_input()
 
