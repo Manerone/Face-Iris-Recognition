@@ -20,6 +20,9 @@ class HOG:
                 hog += self._trilinear_interpolation(cell_ori, cell_mag)
         return self._normalize(hog)
 
+    def show(self, window_hog):
+        img = np.zeros(window.shape)
+
     def _normalize(self, original_vector):
         vector = np.array(original_vector)
         return vector/np.sum(vector)

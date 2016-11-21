@@ -23,15 +23,18 @@ class PedestrianDetector:
             'blockSize': (16, 16),
             'blockDisplacement': 8
         }
+        self.hog_calculator = HOG()
 
     def train(self):
         self.hogs = []
         for img in self.images:
             img_ori, img_mag = self._gradient(img)
             start = time.clock()
-            self.hogs.append(HOG().calculate(img_ori, img_mag))
+            hog = self.hog_calculator.calculate(img_ori, img_mag)
+            self.hogs.append(hog)
             print "Tempo:", (time.clock() - start)
             # raw_input()
+        HOG().show(hog[0])
 
     # def train(self):
     #     for image in self.images:
@@ -59,16 +62,3 @@ class PedestrianDetector:
 
     def _gradient(self, image):
         return Gradient().call(image)
-
-    def _show(self, orientations, magnitudes):
-        heigth, width = orientations.shape
-        img = np.ones((heigth, width))
-        img.fill(255)
-        for i in xrange(heigth):
-            for j in xrange(width):
-                x = (int)(j + magnitudes[i][j] * math.cos(orientations[i][j]))
-                y = (int)(i + magnitudes[i][j] * math.sin(orientations[i][j]))
-                point2 = (x, y)
-                cv2.line(img, (j, i), point2, (0, 0, 0))
-        plt.imshow(img, cmap='Greys')
-        plt.show()
