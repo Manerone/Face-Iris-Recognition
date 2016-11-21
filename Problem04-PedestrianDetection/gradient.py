@@ -61,4 +61,4 @@ class Gradient:
         return math.sqrt(value1 * value1 + value2 * value2)
 
     def _orientation(self, x, y):
-        return math.atan2(y, x)
+        return math.atan2(y, x) % math.pi
