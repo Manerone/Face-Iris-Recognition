@@ -26,27 +26,15 @@ class PedestrianDetector:
         self.hog_calculator = HOG()
 
     def train(self):
-        self.hogs = []
-        for img in self.images:
-            img_ori, img_mag = self._gradient(img)
-            start = time.clock()
-            hog = self.hog_calculator.calculate(img_ori, img_mag)
-            self.hogs.append(hog)
-            print "Tempo:", (time.clock() - start)
-            # raw_input()
-        HOG().show(hog[0])
-
-    # def train(self):
-    #     for image in self.images:
-    #         for img in self._pyramidize(image):
-                # img_ori, img_mag = self._gradient(img)
-                # a = self._windownize(img_ori)
-                # b = self._windownize(img_mag)
-                # for window_ori, window_mag in zip(a, b):
-                #     start = time.clock()
-                #     HOG().calculate(window_ori, window_mag)
-                #     print "Tempo:", (time.clock() - start)
-                #     raw_input()
+        for image in self.images:
+            for img in self._pyramidize(image):
+                img_ori, img_mag = self._gradient(img)
+                a = self._windownize(img_ori)
+                b = self._windownize(img_mag)
+                for window_ori, window_mag in zip(a, b):
+                    start = time.clock()
+                    HOG().calculate(window_ori, window_mag)
+                    print "Tempo:", (time.clock() - start)
 
     def _pyramidize(self, image):
         return Pyramid.call(
