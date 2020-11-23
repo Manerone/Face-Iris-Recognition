@@ -1,4 +1,4 @@
-# Computer Vision and Machine Learning Projects
+# Face and Iris Recognition Projects
 Discipline of Topics in Computer Vision, second semester of 2016 (CI396-2016-2).
 This repository has my solutions to the problems presented in the discipline.
 
