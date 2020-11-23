@@ -1,8 +1,6 @@
 # CI396-2016-2
 Discipline of Topics in Computer Vision, second semester of 2016.
 This repository has my solutions to the problems presented in the discipline.
-All code is written in python because it would be easer to do the assignments and
-for learning purposes.
 
 ## Problems
 A brief description of each problem
@@ -10,6 +8,7 @@ A brief description of each problem
 ### Problem 01 - Face Identification
 
 ##### How to execute
+Go to the directory: Problem01-FaceIdentification
 Just type in the console: ```python main.py```
 
 ##### Databases
@@ -29,6 +28,7 @@ Just type in the console: ```python main.py```
 ### Problem 02 - Iris Identification
 
 ##### How to execute
+Go to the directory: Problem02-IrisRecognition
 Just type in the console: ```python main.py```
 
 ##### Parts
