@@ -35,7 +35,7 @@ class IrisSignaturizer:
         accumulator_threshold = 150
         circles = None
         while circles is None:
-            circles = cv2.HoughCircles(image, cv2.cv.CV_HOUGH_GRADIENT,
+            circles = cv2.HoughCircles(image, cv2.HOUGH_GRADIENT,
                                        1, 1, param2=accumulator_threshold)
             accumulator_threshold = accumulator_threshold - 1
         circles = np.uint16(np.around(circles[0, :]))
@@ -51,7 +51,8 @@ class IrisSignaturizer:
             points.append(img[y_p][x_p])
         return np.array(points)
 
-    def find_iris(self, (x_pupil, y_pupil, r_pupil), img, value=4):
+    def find_iris(self, pupil_coords, img, value=4):
+        x_pupil, y_pupil, r_pupil = pupil_coords
         image = cv2.equalizeHist(img)
         n_of_rows, n_of_columns = img.shape
         max_r = min((n_of_rows - y_pupil, n_of_columns - x_pupil))
@@ -80,15 +81,17 @@ class IrisSignaturizer:
         # cv2.waitKey(0)
         return canny
 
-    def normalize_iris(self, (x_pupil, y_pupil, r_pupil),
-                       (x_iris, y_iris, r_iris),
+    def normalize_iris(self, pupil_coords,
+                       iris_coords,
                        image, n_of_divisions=360):
+        x_pupil, y_pupil, r_pupil = pupil_coords
+        x_iris, y_iris, r_iris = iris_coords
         distance_of_each_division = (2 * np.pi) / n_of_divisions
         normalized_image = []
-        for division in xrange(n_of_divisions):
+        for division in range(n_of_divisions):
             teta = distance_of_each_division * division
             points = []
-            for radius in xrange(int(r_pupil), int(r_iris + 1)):
+            for radius in range(int(r_pupil), int(r_iris + 1)):
                 y_p = y_iris + int(radius * np.cos(teta))
                 x_p = x_iris + int(radius * np.sin(teta))
                 points.append(image[y_p][x_p])
