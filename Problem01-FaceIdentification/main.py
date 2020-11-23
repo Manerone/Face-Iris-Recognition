@@ -11,17 +11,17 @@ CLEAR_LINE = '\x1b[2K'
 
 
 def print_system_info():
-    print '=======================SYSTEM INFORMATION=========================='
-    print '-> System: ', platform.system(), platform.release()
-    print '-> Python Version: ', platform.python_version()
-    print '==================================================================='
+    print('=======================SYSTEM INFORMATION==========================')
+    print( '-> System: ', platform.system(), platform.release())
+    print( '-> Python Version: ', platform.python_version())
+    print( '===================================================================')
 
 
 def calculate_yale():
-    print '-----------------------Yale Faces Tests----------------------------'
+    print ('-----------------------Yale Faces Tests----------------------------')
     yale = YaleFaces('./databases/yalefaces/')
     for label in yale.class_labels:
-        print 'Testing remotion of label: ', label
+        print('Testing remotion of label: ', label)
         images = []
         subjects = []
         test_images = []
@@ -41,20 +41,20 @@ def calculate_yale():
             if test_subject == result:
                 correct += 1
         accuracy = correct / float(len(test_subjects))
-        print 'Accuracy: ', accuracy * 100, '%'
+        print ('Accuracy: ', accuracy * 100, '%')
 
 
 def calculate_orl():
-    print '-----------------------ORL Faces Tests-----------------------------'
+    print ('-----------------------ORL Faces Tests-----------------------------')
     number_of_eigenfaces_on_each_test = [5, 10, 50, 100, 200, 300]
     orl = ORL('./databases/orl_faces/')
     n_of_images = len(orl.images)
     k_fold = 10
     n_of_itens_per_fold = n_of_images / k_fold
     for n_of_eigenfaces in number_of_eigenfaces_on_each_test:
-        print 'Testing with', n_of_eigenfaces, 'eigenfaces'
+        print( 'Testing with', n_of_eigenfaces, 'eigenfaces')
         means = []
-        for k in xrange(k_fold):
+        for k in range(k_fold):
             stdout.write('\r%d%%' % ((k/float(k_fold))*100))
             stdout.flush()
             images = []
@@ -63,9 +63,8 @@ def calculate_orl():
             test_subjects = []
             n_of_correct_guesses = 0
             n_of_tries = 0
-            indexes_to_test = random.sample(
-                range(n_of_images), n_of_itens_per_fold)
-            for index in xrange(n_of_images):
+            indexes_to_test = random.sample(range(n_of_images), int(n_of_itens_per_fold))
+            for index in range(n_of_images):
                 if index in indexes_to_test:
                     test_images.append(orl.images[index])
                     test_subjects.append(orl.subjects[index])
@@ -83,8 +82,8 @@ def calculate_orl():
                     n_of_correct_guesses += 1
             means.append(n_of_correct_guesses / float(n_of_tries))
         stdout.write('\r' + CLEAR_LINE)
-        print 'Accuracy:', np.mean(means)*100, '%'
-        print 'Standart Deviation:', np.std(means), '\n'
+        print ('Accuracy:', np.mean(means)*100, '%')
+        print ('Standart Deviation:', np.std(means), '\n')
 
 
 # MAIN
